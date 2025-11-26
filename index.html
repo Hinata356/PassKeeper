@@ -1,11 +1,57 @@
 <!DOCTYPE html>
-<html lang="Ja">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>パスワード封印ツール</title>
-    </head>
-    <body>
-        <h1>パスワード封印ツール</h1>
-    </body>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassKeeper</title>
+    <link rel="stylesheet" href="CSS/style.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+    <div class="logo">PassKeeper</div>
+    <button class="menu-btn">
+        <svg class="menu-icon" viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="2.5" rx="1" />
+            <rect x="3" y="11" width="18" height="2.5" rx="1" />
+            <rect x="3" y="17" width="18" height="2.5" rx="1" />
+        </svg>
+    </button>
+    </header>
+
+    <!-- Main -->
+    <main class="container">
+    <h1 class="main-title">
+        あなたの目からパスワードを守ります
+    </h1>
+
+    <!-- Main button area -->
+    <div class="button-group">
+        <button class="btn btn-pass">新規パスワードを作成</button>
+        <button class="btn btn-game">ミニゲームで忘れる</button>
+    </div>
+
+    <!-- Card -->
+    <div class="card-container">
+        <div class="card empty"></div>
+        <div class="card empty"></div>
+        <div class="card empty"></div>
+        <div class="card empty"></div>
+    </div>
+
+        <!-- <h3 class="card-title">表示名　●●●●●</h3>
+        <p class="small-text">あと 何時間 何分 何秒</p>
+        <p class="small-text">残り <strong>1/3</strong> 回</p>
+
+        <div class="alert">
+        <span class="alert-icon">⚠️</span>
+        <div>
+            表示回数が減っています！
+            <br>パスワードの表示回数が残りわずかです。
+        </div>
+        </div>
+    </div> -->
+    </main>
+</body>
 </html>
