@@ -106,6 +106,10 @@ body {
     background: linear-gradient(160deg, #ffcf4d 0%, #f5a300 100%);
 }
 
+.btn-delete-all {
+    background: linear-gradient(160deg, #ff9999 0%, #ff3b3b 100%);
+}
+
 /* Password Card */
 .card-container {
     display: grid;
@@ -142,24 +146,6 @@ body {
 .card:hover {
     transform: translateY(-4px);
 }
-
-/* Alert Message */
-.alert {
-    background: #fff3d4;
-    margin-top: 16px;
-    padding: 12px;
-    border-radius: 12px;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    font-size: 14px;
-    color: #7a5a2c;
-}
-
-.alert-icon {
-    margin-top: 2px;
-}
-
 
 /* Responsive */
 @media (max-width: 1100px) {

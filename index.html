@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PassKeeper</title>
-    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/modal.css">
 </head>
 
 <body>
@@ -22,23 +23,89 @@
 
     <!-- Main -->
     <main class="container">
-    <h1 class="main-title">
-        あなたの目からパスワードを守ります
-    </h1>
+        <h1 class="main-title">
+            あなたの目からパスワードを守ります
+        </h1>
 
-    <!-- Main button area -->
-    <div class="button-group">
-        <button class="btn btn-pass">新規パスワードを作成</button>
-        <button class="btn btn-game">ミニゲームで忘れる</button>
-    </div>
+        <!-- Main button area -->
+        <div class="button-group">
+            <button id="create-pass-btn" class="btn btn-pass">新規パスワードを作成</button>
+            <button class="btn btn-game">ミニゲームで忘れる</button>
+        </div>
 
-    <!-- Card -->
-    <div class="card-container">
-        <div class="card empty"></div>
-        <div class="card empty"></div>
-        <div class="card empty"></div>
-        <div class="card empty"></div>
-    </div>
+        <!-- Card -->
+        <div class="card-container">
+            <div class="card empty"></div>
+        </div>
+
+        <!-- Modal -->
+        <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>パスワード設定</h2>
+
+            <label>パスワード名</label>
+            <input type="text" id="name-input" placeholder="任意（未入力なら自動）">
+
+            <label>パスワード</label>
+            <input type="text" id="manual-pass-input" placeholder="手入力 or 自動生成">
+
+            <label>自動生成</label>
+            <div class="password-options">
+                <input type="number" id="length-input" min="1" value="4"> 桁
+                <select id="charset-select">
+                    <option value="num">数字のみ</option>
+                    <option value="alpha">英数字</option>
+                    <option value="all">英数字+記号</option>
+                </select>
+                <button id="generate-btn" class="btn btn-pass">生成</button>
+            </div>
+
+            <label>再表示ロック期間（分）</label>
+            <input type="datetime-local" id="deadline-input">
+
+            <label>緊急表示回数</label>
+            <input type="number" id="emergency-input" value="1">
+
+            <div class="modal-btn-area">
+                <button id="save-btn" class="btn btn-pass">保存</button>
+                <button id="cancel-btn" class="btn btn-game">キャンセル</button>
+            </div>
+        </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div id="edit-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>カード編集</h2>
+
+            <label>名前</label>
+            <input type="text" id="edit-name">
+
+            <label>パスワード</label>
+            <input type="text" id="edit-password">
+
+            <label>再表示期限</label>
+            <input type="datetime-local" id="edit-deadline">
+
+            <label>緊急表示回数</label>
+            <input type="number" id="edit-emergency">
+
+            <div class="modal-btn-area">
+                <button id="edit-save-btn" class="btn">変更を保存</button>
+                <button id="delete-btn" class="btn danger">削除</button>
+                <button id="edit-cancel-btn" class="btn">キャンセル</button>
+            </div>
+        </div>
+        </div>
+
+        <div class="button-group">
+            <button id="delete-all-btn" class="btn btn-delete-all">全削除</button>
+        </div>
+
+        <script src="js/script.js"></script>
+    </main>
+</body>
+</html>
 
         <!-- <h3 class="card-title">表示名　●●●●●</h3>
         <p class="small-text">あと 何時間 何分 何秒</p>
@@ -52,6 +119,3 @@
         </div>
         </div>
     </div> -->
-    </main>
-</body>
-</html>
