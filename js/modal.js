@@ -170,3 +170,4 @@ includeSymbols.addEventListener("change", generatePassword);
 lowerCase.addEventListener("change", generatePassword);
 upperCase.addEventListener("change", generatePassword);
 charTypeOptions.forEach(option => option.addEventListener("change", generatePassword));
+

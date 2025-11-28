@@ -63,7 +63,7 @@
                     </label>
                     <div id="autoLength" class="auto-length hidden">
                         <label class="small-label">桁数</label>
-                        <input type="number" id="pwLength" value="4" min="1" max="32" class="" />
+                        <input type="number" id="pwLength" value="4" min="1" max="99" class="" />
                     </div>
                 </div>
 
@@ -83,17 +83,18 @@
                         </div>
 
                         <div class="input-row wrap">
-                            <label class="radio-option"><input type="checkbox" id="useCase"> 記号を含める</label>
+                            <label class="radio-option"><input type="checkbox" id="includeSymbols"> 記号を含める</label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Display field + Reload button -->
-                <div class="pw-display-area">
                 <div class="input-wrapper">
-                    <input type="text" id="pwDisplay" class="modal-input" placeholder="ここに表示 / 手動入力" />
-                </div>
-                <button id="reloadBtn" class="reload-btn hidden">⟳</button>
+                    <textarea id="pwDisplay" class="modal-input pw-display" placeholder="表示/手動入力"></textarea>
+                    <div class="icon-column">
+                        <span class="dli-redo"></span>
+                        <span class="dli-copy"></span>
+                    </div>
                 </div>
 
                 <!-- Hide until -->
