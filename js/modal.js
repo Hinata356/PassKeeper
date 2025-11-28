@@ -88,6 +88,85 @@ function handleCharTypeChange() {
         upperCase.parentElement.classList.remove("disabled-option");
     }
 }
-
 // Initial setup
 handleCharTypeChange();
+
+
+// ===== Auto-generate password based on selected options =====
+// DOM elements
+const pwDisplay = document.getElementById("pwDisplay");
+const pwLength = document.getElementById("pwLength");
+const includeSymbols = document.getElementById("includeSymbols");
+
+const pwSelect = document.querySelectorAll("input[name='pwSelect']");
+const charTypeOptions = document.querySelectorAll("input[name='charType']");
+
+// Character sets
+const numbers = "0123456789";
+const lowerLetters = "abcdefghijklmnopqrstuvwxyz";
+const upperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const symbols = "!@#$%^&*()_+-={}[];:,./<>?";
+
+// Function to generate a new password
+function generatePassword() {
+    // Get selected length
+    const length = parseInt(pwLength.value);
+
+    // Determine base character type selection
+    const selectedCharType = document.querySelector("input[name='charType']:checked").value;
+
+    let charPool = "";
+
+    // Build character pool based on type selection
+    if (selectedCharType === "num") {
+        charPool = numbers;
+    } else if (selectedCharType === "al") {
+        charPool = lowerLetters + upperLetters;
+    } else if (selectedCharType === "alnum") {
+        charPool = numbers + lowerLetters + upperLetters;
+    }
+
+    // Filtering options for lowercase / uppercase only
+    if (lowerCase.checked && !upperCase.checked) {
+        charPool = lowerLetters;
+    }
+    if (upperCase.checked && !lowerCase.checked) {
+        charPool = upperLetters;
+    }
+
+    // Add symbol characters if enabled
+    if (includeSymbols.checked) {
+        charPool += symbols;
+    }
+
+    // If no characters selected, default to numbers
+    if (charPool.length === 0) {
+        charPool = numbers;
+    }
+
+    // Generate password string
+    let password = "";
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charPool.length);
+        password += charPool[randomIndex];
+    }
+
+    // Display generated password
+    pwDisplay.value = password;
+}
+
+// Listen for pwSelect changes (manual / auto)
+pwSelect.forEach(option => {
+    option.addEventListener("change", () => {
+        if (option.value === "auto") {
+            generatePassword();  // Generate immediately when "auto" is selected
+        }
+    });
+});
+
+// Regenerate password when options or length change
+pwLength.addEventListener("input", generatePassword);
+includeSymbols.addEventListener("change", generatePassword);
+lowerCase.addEventListener("change", generatePassword);
+upperCase.addEventListener("change", generatePassword);
+charTypeOptions.forEach(option => option.addEventListener("change", generatePassword));
