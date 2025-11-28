@@ -11,14 +11,17 @@
 <body>
     <!-- Header -->
     <header class="header">
-    <div class="logo">PassKeeper</div>
-    <button class="menu-btn">
-        <svg class="menu-icon" viewBox="0 0 24 24">
-            <rect x="3" y="5" width="18" height="2.5" rx="1" />
-            <rect x="3" y="11" width="18" height="2.5" rx="1" />
-            <rect x="3" y="17" width="18" height="2.5" rx="1" />
-        </svg>
-    </button>
+        <div class="logo">PassKeeper</div>
+        <!-- Settings Icon Button -->
+        <button id="settings-btn" class="settings-icon-btn">
+            <svg class="settings-icon" viewBox="0 0 24 24">
+                <path
+                    d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zm8.3-3.2c0-.4 0-.8-.1-1.1l2.1-1.6c.2-.2.3-.5.2-.8l-2-3.5c-.1-.3-.5-.4-.8-.3l-2.5 1c-.6-.5-1.2-.9-1.9-1.2l-.4-2.7c0-.3-.3-.6-.6-.6h-4c-.3 0-.6.2-.6.5l-.4 2.8c-.7.3-1.3.7-1.9 1.2l-2.5-1c-.3-.1-.6 0-.8.3l-2 3.5c-.1.3 0 .6.2.8l2.1 1.6c0 .4-.1.8-.1 1.1s0 .8.1 1.1l-2.1 1.6c-.2.2-.3.5-.2.8l2 3.5c.1.3.5.4.8.3l2.5-1c.6.5 1.2.9 1.9 1.2l.4 2.7c0 .3.3.6.6.6h4c.3 0 .6-.2.6-.5l.4-2.8c.7-.3 1.3-.7 1.9-1.2l2.5 1c.3.1.6 0 .8-.3l2-3.5c.1-.3 0-.6-.2-.8l-2.1-1.6c.1-.3.1-.7.1-1.1z"
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                />
+            </svg>
+        </button>
     </header>
 
     <!-- Main -->
@@ -38,57 +41,88 @@
             <div class="card empty"></div>
         </div>
 
-        <!-- Modal -->
-        <div id="modal" class="modal hidden">
-        <div class="modal-content">
-            <h2>パスワード設定</h2>
+        <!-- Modal: Create New Password -->
+        <div id="passwordModal" class="modal-overlay hidden">
+            <div class="modal-container">
+                <h2 class="modal-title">新規パスワードを作成</h2>
 
-            <label>パスワード名</label>
-            <input type="text" id="name-input" placeholder="任意（未入力なら自動）">
+                <!-- Name -->
+                <label class="modal-label">名前（任意）</label>
+                <div class="input-wrapper">
+                    <input type="text" id="pwName" class="modal-input" placeholder="例: スクリーンタイム" />
+                </div>
 
-            <label>パスワード</label>
-            <input type="text" id="manual-pass-input" placeholder="手入力 or 自動生成">
+                <!-- Manual / Auto Generation -->
+                <label class="modal-label">パスワード</label>
+                <div class="input-row">
+                    <label class="radio-option">
+                        <input type="radio" name="pwSelect" value="manual"> 手動
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="pwSelect" value="auto" checked> 生成
+                    </label>
+                    <div id="autoLength" class="auto-length hidden">
+                        <label class="small-label">桁数</label>
+                        <input type="number" id="pwLength" value="4" min="1" max="32" class="" />
+                    </div>
+                </div>
 
-            <label>自動生成</label>
-            <div class="password-options">
-                <input type="number" id="length-input" min="1" value="4"> 桁
-                <select id="charset-select">
-                    <option value="num">数字のみ</option>
-                    <option value="alpha">英数字</option>
-                    <option value="all">英数字+記号</option>
-                </select>
-                <button id="generate-btn" class="btn btn-pass">生成</button>
+                <!-- Generation Options -->
+                <div id="autoOptions" class="auto-options hidden">
+                    <div class="option-divider"></div>
+                    <div class="input-row wrap">
+                        <label class="radio-option"><input type="radio" name="charType" value="num" checked> 数字のみ</label>
+                        <label class="radio-option"><input type="radio" name="charType" value="al"> 英字のみ</label>
+                        <label class="radio-option"><input type="radio" name="charType" value="alnum"> 英数字</label>
+                    </div>
+
+                    <div class="check-container">
+                        <div class="input-row wrap">
+                            <label class="radio-option"><input type="checkbox" id="lowerCase"> 小文字のみ</label>
+                            <label class="radio-option"><input type="checkbox" id="upperCase"> 大文字のみ</label>
+                        </div>
+
+                        <div class="input-row wrap">
+                            <label class="radio-option"><input type="checkbox" id="useCase"> 記号を含める</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display field + Reload button -->
+                <div class="pw-display-area">
+                <div class="input-wrapper">
+                    <input type="text" id="pwDisplay" class="modal-input" placeholder="ここに表示 / 手動入力" />
+                </div>
+                <button id="reloadBtn" class="reload-btn hidden">⟳</button>
+                </div>
+
+                <!-- Hide until -->
+                <label class="modal-label">期限</label>
+                <div class="input-wrapper">
+                    <input type="datetime-local" id="hideUntil" class="modal-input" />
+                </div>
+
+                <!-- Emergency reveal count -->
+                <label class="modal-label">緊急表示の回数</label>
+                <div class="input-wrapper">
+                    <input type="number" id="emergencyNum" class="modal-input small" min="0" max="100" value="1" />
+                </div>
+
+                <!-- Buttons -->
+                <div class="button-row">
+                    <button id="cancelModal" class="btn-secondary">キャンセル</button>
+                    <button id="saveModal" class="btn-primary">作成</button>
+                </div>
             </div>
-
-            <label>再表示ロック期間（分）</label>
-            <input type="datetime-local" id="deadline-input">
-
-            <label>緊急表示回数</label>
-            <input type="number" id="emergency-input" value="1">
-
-            <div class="modal-btn-area">
-                <button id="save-btn" class="btn btn-pass">保存</button>
-                <button id="cancel-btn" class="btn btn-game">キャンセル</button>
-            </div>
-        </div>
         </div>
 
         <!-- Edit Modal -->
         <div id="edit-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>カード編集</h2>
+            <h2>名前を変更</h2>
 
             <label>名前</label>
             <input type="text" id="edit-name">
-
-            <label>パスワード</label>
-            <input type="text" id="edit-password">
-
-            <label>再表示期限</label>
-            <input type="datetime-local" id="edit-deadline">
-
-            <label>緊急表示回数</label>
-            <input type="number" id="edit-emergency">
 
             <div class="modal-btn-area">
                 <button id="edit-save-btn" class="btn">変更を保存</button>
@@ -102,7 +136,7 @@
             <button id="delete-all-btn" class="btn btn-delete-all">全削除</button>
         </div>
 
-        <script src="js/script.js"></script>
+        <script src="js/modal.js" defer></script>
     </main>
 </body>
 </html>

@@ -1,89 +1,183 @@
-.card-title {
+/* ===== Modal Background ===== */
+    .modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(6px);
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    z-index: 999;
 }
 
-.card-name {
-    font-size: 22px;
-    font-weight: 700;
-}
-
-.card-dots {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 6px;
-}
-
-.card-info {
-    margin-top: 5px;
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1.6;
-}
-
-/* Alert Message */
-.alert {
-    background: #fff3d4;
-    margin-top: 16px;
-    padding: 12px;
-    border-radius: 12px;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    font-size: 14px;
-    color: #7a5a2c;
-}
-
-.alert-icon {
-    margin-top: 2px;
-}
-
-.show-button {
-    margin-top: 8px;
-    padding: 12px 0;
-    background: #2a8cff;
-    border-radius: 12px;
-    font-size: 18px;
-    color: white;
-    cursor: pointer;
-    border: none;
-}
-
-.modal.hidden {
+.auto-length.hidden,
+.hidden {
     display: none;
 }
 
-/* Modal */
-.modal.hidden { display: none; }
-
-.modal {
-    position: fixed; inset: 0;
-    display: flex; justify-content: center; align-items: center;
-    background: rgba(0,0,0,0.4);
+/* ===== Container ===== */
+.modal-container {
+    width: min(92%, 420px);
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
-.modal-content {
-    background: white; padding: 20px;
-    display: flex; flex-direction: column; gap: 10px;
-    border-radius: 10px; width: 320px;
+/* ===== Text & Inputs ===== */
+.input-wrapper {
+    width: 85%;
+    padding-left: 18px;
 }
 
-.modal-btn-area { display: flex; gap: 10px; justify-content: space-between; }
+.modal-title {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 25px;
+    text-align: left;
+}
 
-.edit-btn {
-    background: none;
+.modal-label {
+    margin-top: 20px;
+    margin-left: 6px;
+    display: block;
+    font-weight: 600;
+    font-size: 18px;
+    text-align: left;
+}
+
+.modal-input {
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px 18px;
+    background: #f7f7f8;
+    border: 1px solid #d7d8da;
+    border-radius: 14px;
+    font-size: 15px;
+    outline: none;
+}
+
+#emergencyNum {
+    width: 80px;
+    border: 2px solid #b8b8b8;
+    border-radius: 12px;
+    background: #f7f7f7;
+    outline: none;
+    padding: 6px 12px;
+    font-size: 20px;
+}
+
+.small {
+    width: 60px;
+    text-align: left;
+    display: block;
+}
+
+/* ===== Options ===== */
+.input-row {
+    display: flex;
+    gap: 16px;
+    margin: 4px auto auto 35px;
+    align-items: center;
+}
+
+.auto-length {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: -2px;
+    margin-left: 60px;
+}
+
+.small-label {
+    font-size: 18px;
+}
+
+#pwLength {
+    width: 60px;
+    border: 2px solid #b8b8b8;
+    border-radius: 12px;
+    background: #f7f7f7;
+    outline: none;
+    padding: 6px 12px;
+    font-size: 20px;
+}
+
+.option-divider {
+    width: 95%;
+    border-top: 1.5px dashed #cfcfcf;
+    margin: 14px auto 12px auto;
+}
+
+.auto-options {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.wrap {
+    flex-wrap: wrap;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.disabled-option {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.check-container {
+    margin-top: 18px;
+}
+
+/* Buttons */
+.button-row {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    gap: 35px;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 40px;
+    border-radius: 14px;
     border: none;
-    font-size: 22px;
     cursor: pointer;
-    opacity: 0.6;
+    font-size: 15px;
+    transition: transform .15s ease;
 }
 
-.edit-btn:hover {
-    opacity: 1;
+/* Filled primary button */
+.btn-primary {
+    background: #007aff;
+    color: #fff;
+    font-weight: 600;
 }
 
-.btn.danger {
-    background: #ff7777;
-    color: white;
+/* Text button (Cancel) */
+.btn-secondary {
+    background: transparent;
+    color: #007aff;
+    font-weight: 500;
+    border: none;
+    padding: 10px 0;
+}
+
+/* Press animation */
+.btn-primary:active, .btn-secondary:active {
+    transform: scale(0.96);
+}
+
+.small-btn {
+padding: 6px 12px;
+font-size: 14px;
+border-radius: 10px;
 }
