@@ -1,14 +1,36 @@
+// ===== Reset modal content when closing =====
+function resetPasswordModal() {
+    // Reset manual/auto mode
+    document.querySelector("input[name='pwSelect'][value='auto']").checked = true;
+
+    // Reset password length
+    pwLength.value = 4;
+
+    // Reset character type radio
+    document.querySelector("input[name='charType'][value='num']").checked = true;
+
+    // Reset checkboxes
+    lowerCase.checked = false;
+    upperCase.checked = false;
+    includeSymbols.checked = false;
+
+    // Clear display field
+    pwDisplay.value = "";
+}
+
 // ===== Modal Show / Hide =====
 const modal = document.getElementById("passwordModal");
 const createBtn = document.getElementById("create-pass-btn");
 const cancelBtn = document.getElementById("cancelModal");
 
 createBtn.addEventListener("click", () => {
+    resetPasswordModal();
     modal.classList.remove("hidden");
 });
 
 cancelBtn.addEventListener("click", () => {
     modal.classList.add("hidden");
+    resetPasswordModal();
 });
 
 
@@ -160,6 +182,8 @@ pwSelect.forEach(option => {
     option.addEventListener("change", () => {
         if (option.value === "auto") {
             generatePassword();  // Generate immediately when "auto" is selected
+        } else if (option.value === "manual") {
+            pwDisplay.value = "";
         }
     });
 });
@@ -183,14 +207,12 @@ pwSelectRadios.forEach(radio => {
 
         if (mode === "manual") {
             // Disable reload button
-            reloadBtn.classList.add("disabled-icon");
+            reloadBtn.classList.add("disabled-option");
             reloadBtn.style.pointerEvents = "none";  // disable click
-            reloadBtn.style.opacity = "0.35";        // visual feedback
         } else {
             // Enable reload button
-            reloadBtn.classList.remove("disabled-icon");
+            reloadBtn.classList.remove("disabled-option");
             reloadBtn.style.pointerEvents = "auto";
-            reloadBtn.style.opacity = "1";
         }
     });
 });
@@ -208,9 +230,29 @@ window.addEventListener("load", () => {
 
 // ===== Copy password to clipboard and show visual feedback ("Copied" + check) =====
 const copyBtn = document.getElementById("copyBtn");
+const checkIcon = document.getElementById("checkIcon");
 
 copyBtn.addEventListener("click", () => {
     navigator.clipboard.writeText(pwDisplay.value)
+        .then(() => {
+
+            // Wait for click animation to finish
+            copyBtn.addEventListener("transitionend", function handler() {
+
+                // Swap icons AFTER animation ends
+                copyBtn.style.display = "none";
+                checkIcon.style.display = "inline-block";
+
+                // Remove event listener (important!)
+                copyBtn.removeEventListener("transitionend", handler);
+
+                // Restore after 3 seconds
+                setTimeout(() => {
+                    checkIcon.style.display = "none";
+                    copyBtn.style.display = "inline-block";
+                }, 3000);
+            }, { once: true });  // Automatically remove listener
+        })
         .catch(err => {
             console.error("Clipboard write failed:", err);
         });

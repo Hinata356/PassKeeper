@@ -86,6 +86,7 @@
     line-height: 1.4;
     letter-spacing: 0.1em;
     display: block;
+    font-weight: 900;
 }
 
 #emergencyNum {
@@ -174,6 +175,7 @@
   position: relative;
   width: 1em;
   height: 1em;
+  opacity: 0.75;
 }
 
 .dli-redo::before {
@@ -251,6 +253,24 @@
   box-shadow: 0 -0.1575em 0 0.1575em #fff;
 }
 
+/* ===== Check icon ===== */
+.dli-check {
+  display: inline-block;
+  vertical-align: middle;
+  color: #333;
+  line-height: 1;
+  width: 1em;
+  height: 0.45em;
+  border: 0.1em solid currentColor;
+  border-top: 0;
+  border-right: 0;
+  box-sizing: border-box;
+  rotate: -45deg;
+  margin-top: -4px;
+  margin-left: 4px;
+  display: none;
+}
+
 /* ===== Buttons ===== */
 .pw-display-area {
     display: flex;
@@ -269,22 +289,36 @@
     scale: 1.25;
 }
 
-.icon-column span {
+.no-hover{
+    font-size: 26px;
+    opacity: 0.75;
+}
+
+.icon-btn {
     cursor: pointer;
     font-size: 26px;
     opacity: 0.75;
     transition: opacity .2s ease, transform .15s ease;
 }
 
-.icon-column span:hover {
+.icon-btn:hover {
     opacity: 1;
     transform: scale(1.02);
 }
 
 /* Click animation */
-.icon-column span:active {
-    transform: scale(0.9);
+.icon-btn:active {
+    transform: scale(0.95);
     opacity: 1;
+}
+
+.icon-slot {
+    width: 1.6em;
+    height: 1.6em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
 .button-row {
