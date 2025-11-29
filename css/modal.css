@@ -65,7 +65,7 @@
 
 #pwName {
     border: 2px solid #b8b8b8;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #f7f7f7;
     outline: none;
     padding: 6px 12px;
@@ -174,7 +174,6 @@
   position: relative;
   width: 1em;
   height: 1em;
-  transform: rotate(45deg);
 }
 
 .dli-redo::before {
@@ -220,6 +219,7 @@
   border-radius: 0.1em;
   box-sizing: content-box;
   box-shadow: -0.2em 0.2em 0 -0.1em #fff, -0.2em 0.2em 0 0 currentColor;
+  margin-left: 4px;
 }
 
 .dli-copy > span {
@@ -252,31 +252,40 @@
 }
 
 /* ===== Buttons ===== */
-                            /* 縦並びアイコンのボックス */
-                            .icon-column {
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                gap: 8px;  /* アイコン間のスペース */
-                                position: absolute;
-                                right: 12px;    /* 入力欄右側へ寄せる */
-                                top: 50%;
-                                transform: translateY(-50%);
-                            }
+.pw-display-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    margin-top: 12px;
+}
 
-                            /* 各アイコン */
-                            .dli-redo,
-                            .dli-copy {
-                                cursor: pointer;
-                                font-size: 18px;   /* アイコンのサイズ調整 */
-                                opacity: 0.7;
-                            }
+.icon-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    margin-top: 10px;
+    scale: 1.25;
+}
 
-                            /* hover の視覚効果 */
-                            .dli-redo:hover,
-                            .dli-copy:hover {
-                                opacity: 1;
-                            }
+.icon-column span {
+    cursor: pointer;
+    font-size: 26px;
+    opacity: 0.75;
+    transition: opacity .2s ease, transform .15s ease;
+}
+
+.icon-column span:hover {
+    opacity: 1;
+    transform: scale(1.02);
+}
+
+/* Click animation */
+.icon-column span:active {
+    transform: scale(0.9);
+    opacity: 1;
+}
 
 .button-row {
     margin-top: 30px;

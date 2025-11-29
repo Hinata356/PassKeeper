@@ -91,12 +91,12 @@ function handleCharTypeChange() {
 // Initial setup
 handleCharTypeChange();
 
-
 // ===== Auto-generate password based on selected options =====
 // DOM elements
 const pwDisplay = document.getElementById("pwDisplay");
 const pwLength = document.getElementById("pwLength");
 const includeSymbols = document.getElementById("includeSymbols");
+const reloadBtn = document.getElementById("reloadBtn");
 
 const pwSelect = document.querySelectorAll("input[name='pwSelect']");
 const charTypeOptions = document.querySelectorAll("input[name='charType']");
@@ -170,4 +170,48 @@ includeSymbols.addEventListener("change", generatePassword);
 lowerCase.addEventListener("change", generatePassword);
 upperCase.addEventListener("change", generatePassword);
 charTypeOptions.forEach(option => option.addEventListener("change", generatePassword));
+reloadBtn.addEventListener("click", generatePassword);
 
+
+// ===== Handle Manual/Auto password input mode and enable/disable reload button =====
+const pwSelectRadios = document.getElementsByName("pwSelect");
+
+// Listen for mode changes (manual / auto)
+pwSelectRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+        const mode = document.querySelector('input[name="pwSelect"]:checked').value;
+
+        if (mode === "manual") {
+            // Disable reload button
+            reloadBtn.classList.add("disabled-icon");
+            reloadBtn.style.pointerEvents = "none";  // disable click
+            reloadBtn.style.opacity = "0.35";        // visual feedback
+        } else {
+            // Enable reload button
+            reloadBtn.classList.remove("disabled-icon");
+            reloadBtn.style.pointerEvents = "auto";
+            reloadBtn.style.opacity = "1";
+        }
+    });
+});
+
+// Default state at startup
+window.addEventListener("load", () => {
+    const mode = document.querySelector('input[name="pwSelect"]:checked').value;
+    if (mode === "manual") {
+        reloadBtn.classList.add("disabled-icon");
+        reloadBtn.style.pointerEvents = "none";
+        reloadBtn.style.opacity = "0.35";
+    }
+});
+
+
+// ===== Copy password to clipboard and show visual feedback ("Copied" + check) =====
+const copyBtn = document.getElementById("copyBtn");
+
+copyBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(pwDisplay.value)
+        .catch(err => {
+            console.error("Clipboard write failed:", err);
+        });
+});
