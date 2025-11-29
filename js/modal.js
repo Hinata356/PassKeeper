@@ -1,28 +1,60 @@
-// ===== Reset modal content when closing =====
-function resetPasswordModal() {
-    // Reset manual/auto mode
-    document.querySelector("input[name='pwSelect'][value='auto']").checked = true;
-
-    // Reset password length
-    pwLength.value = 4;
-
-    // Reset character type radio
-    document.querySelector("input[name='charType'][value='num']").checked = true;
-
-    // Reset checkboxes
-    lowerCase.checked = false;
-    upperCase.checked = false;
-    includeSymbols.checked = false;
-
-    // Clear display field
-    pwDisplay.value = "";
-}
-
-// ===== Modal Show / Hide =====
+// =======================
+// Element References
+// =======================
 const modal = document.getElementById("passwordModal");
 const createBtn = document.getElementById("create-pass-btn");
 const cancelBtn = document.getElementById("cancelModal");
 
+const manualRadio = document.querySelector('input[name="pwSelect"][value="manual"]');
+const autoRadio = document.querySelector('input[name="pwSelect"][value="auto"]');
+const pwSelectRadios = document.getElementsByName("pwSelect");
+
+const pwName = document.getElementById("pwName");
+const pwDisplay = document.getElementById("pwDisplay");
+const pwLength = document.getElementById("pwLength");
+
+const autoLength = document.getElementById("autoLength");
+const autoOptions = document.getElementById("autoOptions");
+
+const charTypeRadios = document.querySelectorAll('input[name="charType"]');
+const charTypeOptions = document.querySelectorAll("input[name='charType']");
+const lowerCase = document.getElementById("lowerCase");
+const upperCase = document.getElementById("upperCase");
+const includeSymbols = document.getElementById("includeSymbols");
+
+const reloadBtn = document.getElementById("reloadBtn");
+const copyBtn = document.getElementById("copyBtn");
+const checkIcon = document.getElementById("checkIcon");
+
+const numbers = "0123456789";
+const lowerLetters = "abcdefghijklmnopqrstuvwxyz";
+const upperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const symbols = "!@#$%^&*()_+-={}[];:,./<>?";
+
+
+// =======================
+// Reset Modal State
+// =======================
+function resetPasswordModal() {
+    document.querySelector("input[name='pwSelect'][value='auto']").checked = true;
+    pwLength.value = 4;
+    document.querySelector("input[name='charType'][value='num']").checked = true;
+
+    lowerCase.checked = false;
+    upperCase.checked = false;
+    includeSymbols.checked = false;
+
+    pwName.value = "";
+    pwDisplay.value = "";
+
+    toggleOptions();
+    updateReloadButtonState();
+}
+
+
+// =======================
+// Modal Open / Close
+// =======================
 createBtn.addEventListener("click", () => {
     resetPasswordModal();
     modal.classList.remove("hidden");
@@ -34,29 +66,15 @@ cancelBtn.addEventListener("click", () => {
 });
 
 
-// ===== Toggle visibility of auto password generation options =====
-// Get elements
-const manualRadio = document.querySelector('input[name="pwSelect"][value="manual"]');
-const autoRadio   = document.querySelector('input[name="pwSelect"][value="auto"]');
-const autoLength = document.getElementById("autoLength");
-const autoOptions = document.getElementById("autoOptions");
-
-// Initial setup
-toggleOptions();
-
-// Event listeners
-manualRadio.addEventListener("change", toggleOptions);
-autoRadio.addEventListener("change", toggleOptions);
-
-// Show/Hide auto password options area
+// =======================
+// Toggle auto options
+// =======================
 function toggleOptions() {
     const enable = autoRadio.checked;
 
-    // Show when auto is selected, hide when manual is selected
     autoOptions.classList.toggle("hidden", !enable);
     autoLength.classList.toggle("hidden", !enable);
 
-    // Enable or disable internal inputs
     [autoOptions, autoLength].forEach(section => {
         section.querySelectorAll("input").forEach(input => {
             input.disabled = !enable;
@@ -64,131 +82,84 @@ function toggleOptions() {
     });
 }
 
+manualRadio.addEventListener("change", toggleOptions);
+autoRadio.addEventListener("change", toggleOptions);
+toggleOptions(); // initial setup
 
-// ===== Exclusive behavior for lowercase / uppercase checkboxes =====
-// ===== Exclusive behavior + disable options when NUM is selected =====
-const charTypeRadios = document.querySelectorAll('input[name="charType"]');
-const lowerCase = document.getElementById("lowerCase");
-const upperCase = document.getElementById("upperCase");
 
-lowerCase.addEventListener("change", () => {
-    if (lowerCase.checked) upperCase.checked = false;
-});
-
-upperCase.addEventListener("change", () => {
-    if (upperCase.checked) lowerCase.checked = false;
-});
-
-charTypeRadios.forEach(radio => {
-    radio.addEventListener("change", handleCharTypeChange);
-});
-
-// Exclusive checkboxes
-lowerCase.addEventListener("change", () => {
-    if (lowerCase.checked) upperCase.checked = false;
-});
-upperCase.addEventListener("change", () => {
-    if (upperCase.checked) lowerCase.checked = false;
-});
-
-function handleCharTypeChange() {
+// =======================
+// Character Type & Checkbox exclusive behavior
+// =======================
+function updateCaseOptionRestrictions() {
     const selected = document.querySelector('input[name="charType"]:checked').value;
 
     if (selected === "num") {
-        // disable both
         lowerCase.checked = false;
         upperCase.checked = false;
         lowerCase.disabled = true;
         upperCase.disabled = true;
+
         lowerCase.parentElement.classList.add("disabled-option");
         upperCase.parentElement.classList.add("disabled-option");
+
     } else {
-        // enable both
         lowerCase.disabled = false;
         upperCase.disabled = false;
+
         lowerCase.parentElement.classList.remove("disabled-option");
         upperCase.parentElement.classList.remove("disabled-option");
     }
 }
-// Initial setup
-handleCharTypeChange();
 
-// ===== Auto-generate password based on selected options =====
-// DOM elements
-const pwDisplay = document.getElementById("pwDisplay");
-const pwLength = document.getElementById("pwLength");
-const includeSymbols = document.getElementById("includeSymbols");
-const reloadBtn = document.getElementById("reloadBtn");
+charTypeRadios.forEach(radio => {
+    radio.addEventListener("change", updateCaseOptionRestrictions);
+});
 
-const pwSelect = document.querySelectorAll("input[name='pwSelect']");
-const charTypeOptions = document.querySelectorAll("input[name='charType']");
+lowerCase.addEventListener("change", () => { if (lowerCase.checked) upperCase.checked = false; });
+upperCase.addEventListener("change", () => { if (upperCase.checked) lowerCase.checked = false; });
 
-// Character sets
-const numbers = "0123456789";
-const lowerLetters = "abcdefghijklmnopqrstuvwxyz";
-const upperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const symbols = "!@#$%^&*()_+-={}[];:,./<>?";
+updateCaseOptionRestrictions(); // initial setup
 
-// Function to generate a new password
+
+// =======================
+// Generate Password
+// =======================
 function generatePassword() {
-    // Get selected length
     const length = parseInt(pwLength.value);
-
-    // Determine base character type selection
     const selectedCharType = document.querySelector("input[name='charType']:checked").value;
 
     let charPool = "";
 
-    // Build character pool based on type selection
-    if (selectedCharType === "num") {
-        charPool = numbers;
-    } else if (selectedCharType === "al") {
-        charPool = lowerLetters + upperLetters;
-    } else if (selectedCharType === "alnum") {
-        charPool = numbers + lowerLetters + upperLetters;
-    }
+    if (selectedCharType === "num") charPool = numbers;
+    else if (selectedCharType === "al") charPool = lowerLetters + upperLetters;
+    else if (selectedCharType === "alnum") charPool = numbers + lowerLetters + upperLetters;
 
-    // Filtering options for lowercase / uppercase only
-    if (lowerCase.checked && !upperCase.checked) {
-        charPool = lowerLetters;
-    }
-    if (upperCase.checked && !lowerCase.checked) {
-        charPool = upperLetters;
-    }
+    if (lowerCase.checked && !upperCase.checked) charPool = lowerLetters;
+    if (upperCase.checked && !lowerCase.checked) charPool = upperLetters;
 
-    // Add symbol characters if enabled
-    if (includeSymbols.checked) {
-        charPool += symbols;
-    }
+    if (includeSymbols.checked) charPool += symbols;
 
-    // If no characters selected, default to numbers
-    if (charPool.length === 0) {
-        charPool = numbers;
-    }
+    if (charPool.length === 0) charPool = numbers;
 
-    // Generate password string
     let password = "";
     for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * charPool.length);
-        password += charPool[randomIndex];
+        password += charPool[Math.floor(Math.random() * charPool.length)];
     }
 
-    // Display generated password
     pwDisplay.value = password;
 }
 
-// Listen for pwSelect changes (manual / auto)
-pwSelect.forEach(option => {
-    option.addEventListener("change", () => {
-        if (option.value === "auto") {
-            generatePassword();  // Generate immediately when "auto" is selected
-        } else if (option.value === "manual") {
-            pwDisplay.value = "";
-        }
+
+// Auto/manual selection triggers password generation or clearing
+pwSelectRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+        radio.value === "auto" ? generatePassword() : pwDisplay.value = "";
+        updateReloadButtonState();
     });
 });
 
-// Regenerate password when options or length change
+
+// Password regeneration triggers
 pwLength.addEventListener("input", generatePassword);
 includeSymbols.addEventListener("change", generatePassword);
 lowerCase.addEventListener("change", generatePassword);
@@ -197,63 +168,37 @@ charTypeOptions.forEach(option => option.addEventListener("change", generatePass
 reloadBtn.addEventListener("click", generatePassword);
 
 
-// ===== Handle Manual/Auto password input mode and enable/disable reload button =====
-const pwSelectRadios = document.getElementsByName("pwSelect");
-
-// Listen for mode changes (manual / auto)
-pwSelectRadios.forEach(radio => {
-    radio.addEventListener("change", () => {
-        const mode = document.querySelector('input[name="pwSelect"]:checked').value;
-
-        if (mode === "manual") {
-            // Disable reload button
-            reloadBtn.classList.add("disabled-option");
-            reloadBtn.style.pointerEvents = "none";  // disable click
-        } else {
-            // Enable reload button
-            reloadBtn.classList.remove("disabled-option");
-            reloadBtn.style.pointerEvents = "auto";
-        }
-    });
-});
-
-// Default state at startup
-window.addEventListener("load", () => {
+// =======================
+// Reload Button Enable/Disable
+// =======================
+function updateReloadButtonState() {
     const mode = document.querySelector('input[name="pwSelect"]:checked').value;
-    if (mode === "manual") {
-        reloadBtn.classList.add("disabled-icon");
-        reloadBtn.style.pointerEvents = "none";
-        reloadBtn.style.opacity = "0.35";
-    }
-});
+    const disabled = (mode === "manual");
+
+    reloadBtn.classList.toggle("disabled-option", disabled);
+    reloadBtn.style.pointerEvents = disabled ? "none" : "auto";
+}
+
+window.addEventListener("load", updateReloadButtonState);
 
 
-// ===== Copy password to clipboard and show visual feedback ("Copied" + check) =====
-const copyBtn = document.getElementById("copyBtn");
-const checkIcon = document.getElementById("checkIcon");
-
+// =======================
+// Copy to Clipboard + Icon Swap
+// =======================
 copyBtn.addEventListener("click", () => {
     navigator.clipboard.writeText(pwDisplay.value)
         .then(() => {
-
-            // Wait for click animation to finish
             copyBtn.addEventListener("transitionend", function handler() {
-
-                // Swap icons AFTER animation ends
                 copyBtn.style.display = "none";
                 checkIcon.style.display = "inline-block";
 
-                // Remove event listener (important!)
                 copyBtn.removeEventListener("transitionend", handler);
 
-                // Restore after 3 seconds
                 setTimeout(() => {
                     checkIcon.style.display = "none";
                     copyBtn.style.display = "inline-block";
                 }, 3000);
-            }, { once: true });  // Automatically remove listener
+            }, { once: true });
         })
-        .catch(err => {
-            console.error("Clipboard write failed:", err);
-        });
+        .catch(err => console.error("Clipboard write failed:", err));
 });
