@@ -90,7 +90,7 @@
 
                 <!-- Display field + Reload button -->
                 <div class="input-wrapper pw-display-area">
-                    <textarea id="pwDisplay" class="modal-input pw-display" placeholder="表示/手動入力"></textarea>
+                    <textarea id="pwDisplay" class="modal-input pw-display" placeholder="生成/手動入力"></textarea>
                     <div class="icon-column">
                         <span id="reloadBtn" class="dli-redo icon-btn"></span>
                         <div class="icon-slot">
@@ -103,20 +103,32 @@
                 <!-- Hide until -->
                 <label class="modal-label">期限</label>
                 <div class="limit-datetime-row">
-                    <div class="date-box">
-                        <input type="date" id="limitDateInput" class="limit-input" value="2025-01-01" />
+                    <div class="date-box" id="customDateContainer" tabindex="0">
+                        <div class="date-display-wrapper">
+                            <span class="date-segment" data-type="year">2025</span>
+                            <span class="date-sep">/</span>
+                            <span class="date-segment" data-type="month">00</span>
+                            <span class="date-sep">/</span>
+                            <span class="date-segment" data-type="day">00</span>
+                            <span class="calendar"></span>
+                        </div>
                     </div>
-                    <div class="time-box">
-                        <input type="time" id="limitTimeInput" class="limit-input" value="00:00" />
+                    <div class="time-box" id="customTimeContainer" tabindex="0">
+                        <div class="date-display-wrapper">
+                            <span class="date-segment" data-type="hour">00</span>
+                            <span class="date-sep">:</span>
+                            <span class="date-segment" data-type="minute">00</span>
+                            <span class="clock"></span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="limit-preset-container">
-                    <button class="limit-preset-btn-minus" data-add="30">-1時間</button>
+                    <button class="limit-preset-btn-minus" data-add="-60">-1時間</button>
                     <button class="limit-preset-btn-plus" data-add="30">+30分</button>
                     <button class="limit-preset-btn-plus" data-add="60">+1時間</button>
                     <button class="limit-preset-btn-plus" data-type="today">今日中</button>
-                    <button class="limit-preset-btn-plus" data-type="tomorrow">明日</button>
+                    <button class="limit-preset-btn-plus" data-type="plus-day">次の日</button>
                 </div>
 
                 <!-- Emergency reveal count -->
