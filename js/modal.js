@@ -26,6 +26,8 @@ const reloadBtn = document.getElementById("reloadBtn");
 const copyBtn = document.getElementById("copyBtn");
 const checkIcon = document.getElementById("checkIcon");
 
+const emrgencyNum = document.getElementById("emergencyNum");
+
 const numbers = "0123456789";
 const lowerLetters = "abcdefghijklmnopqrstuvwxyz";
 const upperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -38,6 +40,7 @@ const symbols = "!@#$%^&*()_+-={}[];:,./<>?";
 function resetPasswordModal() {
     document.querySelector("input[name='pwSelect'][value='auto']").checked = true;
     pwLength.value = 4;
+    emrgencyNum.value = 1;
     document.querySelector("input[name='charType'][value='num']").checked = true;
 
     lowerCase.checked = false;
@@ -46,6 +49,7 @@ function resetPasswordModal() {
 
     pwName.value = "";
     pwDisplay.value = "";
+    pwDisplay.style.height = "";
 
     toggleOptions();
     updateReloadButtonState();
@@ -55,16 +59,23 @@ function resetPasswordModal() {
 // =======================
 // Modal Open / Close
 // =======================
+function closeModal() {
+    resetPasswordModal();
+    modal.classList.add("hidden");
+}
+
 createBtn.addEventListener("click", () => {
     resetPasswordModal();
     modal.classList.remove("hidden");
 });
 
-cancelBtn.addEventListener("click", () => {
-    modal.classList.add("hidden");
-    resetPasswordModal();
-});
+cancelBtn.addEventListener("click", closeModal);
 
+modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+        closeModal();
+    }
+});
 
 // =======================
 // Toggle auto options

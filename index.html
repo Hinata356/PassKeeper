@@ -102,8 +102,21 @@
 
                 <!-- Hide until -->
                 <label class="modal-label">期限</label>
-                <div class="input-wrapper">
-                    <input type="datetime-local" id="hideUntil" class="modal-input" />
+                <div class="limit-datetime-row">
+                    <div class="date-box">
+                        <input type="date" id="limitDateInput" class="limit-input" value="2025-01-01" />
+                    </div>
+                    <div class="time-box">
+                        <input type="time" id="limitTimeInput" class="limit-input" value="00:00" />
+                    </div>
+                </div>
+
+                <div class="limit-preset-container">
+                    <button class="limit-preset-btn-minus" data-add="30">-1時間</button>
+                    <button class="limit-preset-btn-plus" data-add="30">+30分</button>
+                    <button class="limit-preset-btn-plus" data-add="60">+1時間</button>
+                    <button class="limit-preset-btn-plus" data-type="today">今日中</button>
+                    <button class="limit-preset-btn-plus" data-type="tomorrow">明日</button>
                 </div>
 
                 <!-- Emergency reveal count -->
