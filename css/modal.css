@@ -604,3 +604,146 @@
 .clock:active::after {
     background-color: #2a8abd;
 }
+
+/* =========================================
+   Additional UI (confirm / preview / notice)
+   ========================================= */
+.modal-text {
+    margin: -8px 0 0;
+    font-size: 16px;
+    color: #222;
+    line-height: 1.55;
+    text-align: left;
+}
+
+.modal-subtext {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.45;
+    text-align: left;
+}
+
+.modal-subtext.compact {
+    margin-top: -10px;
+}
+
+.extend-limit-modal {
+    width: min(92%, 460px);
+}
+
+.confirm-modal {
+    width: min(92%, 430px);
+    padding-top: 28px;
+    padding-bottom: 22px;
+}
+
+.confirm-modal .modal-title {
+    margin-bottom: 18px;
+    font-size: 28px;
+}
+
+.confirm-button-row {
+    gap: 18px;
+    margin-top: 24px;
+}
+
+.preview-modal {
+    width: min(92%, 500px);
+    padding-top: 26px;
+}
+
+.preview-modal .modal-title {
+    margin-bottom: 14px;
+}
+
+.preview-password-text {
+    background: #f7f7f8;
+    border: 1px solid #d7d8da;
+    border-radius: 14px;
+    padding: 14px 16px;
+    min-height: 50px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 16px;
+    line-height: 1.45;
+    color: #111827;
+    word-break: break-all;
+    text-align: left;
+}
+
+.button-row.compact {
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.btn-danger {
+    background: #ff3b30;
+    color: #fff;
+}
+
+.notice-area {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(92vw, 360px);
+    pointer-events: none;
+}
+
+.notice-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(255,255,255,.96);
+    color: #1f2937;
+    border: 1px solid rgba(17,24,39,.08);
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: 0 12px 26px rgba(17,24,39,.12);
+    transform: translateY(-8px);
+    opacity: 0;
+    transition: transform .16s ease, opacity .16s ease;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.notice-item.is-show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.notice-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 999px;
+    background: #007aff;
+    flex-shrink: 0;
+}
+
+.notice-item.success .notice-dot { background: #12b76a; }
+.notice-item.error .notice-dot { background: #ff3b30; }
+.notice-item.info .notice-dot { background: #007aff; }
+
+.notice-message {
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+    .notice-area {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+    }
+
+    .confirm-modal .modal-title,
+    .preview-modal .modal-title,
+    .extend-limit-modal .modal-title {
+        font-size: 24px;
+    }
+}

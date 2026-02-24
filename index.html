@@ -6,6 +6,7 @@
     <title>PassKeeper</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/card.css">
 </head>
 
 <body>
@@ -32,13 +33,25 @@
 
         <!-- Main button area -->
         <div class="button-group">
-            <button id="create-pass-btn" class="btn btn-pass">新規パスワードを作成</button>
-            <button class="btn btn-game">ミニゲームで忘れる</button>
+            <button id="create-pass-btn" class="btn btn-pass" type="button">新規パスワードを作成</button>
+            <button class="btn btn-game" type="button">ミニゲームで忘れる</button>
         </div>
 
         <!-- Card -->
         <div class="card-container">
-            <div class="card empty"></div>
+            
+            <div class="card empty" id="create-card-btn" role="button" tabindex="0">
+                <span>+ 新しいパスワード</span>
+            </div>
+
+        </div>
+            <div class="card empty-state" id="emptyCard" style="display: none;">
+                <div class="empty-content">
+                    <span class="empty-icon">+</span>
+                    <p>新しいパスワードを追加</p>
+                </div>
+            </div>
+
         </div>
 
         <!-- Modal: Create New Password -->
@@ -123,12 +136,12 @@
                     </div>
                 </div>
 
-                <div class="limit-preset-container">
-                    <button class="limit-preset-btn-minus" data-add="-60">-1時間</button>
-                    <button class="limit-preset-btn-plus" data-add="30">+30分</button>
-                    <button class="limit-preset-btn-plus" data-add="60">+1時間</button>
-                    <button class="limit-preset-btn-plus" data-type="today">今日中</button>
-                    <button class="limit-preset-btn-plus" data-type="plus-day">次の日</button>
+                <div class="limit-preset-container" data-picker-scope="create">
+                    <button class="limit-preset-btn-minus" data-add="-60" type="button">-1時間</button>
+                    <button class="limit-preset-btn-plus" data-add="30" type="button">+30分</button>
+                    <button class="limit-preset-btn-plus" data-add="60" type="button">+1時間</button>
+                    <button class="limit-preset-btn-plus" data-type="today" type="button">今日中</button>
+                    <button class="limit-preset-btn-plus" data-type="plus-day" type="button">次の日</button>
                 </div>
 
                 <!-- Emergency reveal count -->
@@ -139,8 +152,77 @@
 
                 <!-- Buttons -->
                 <div class="button-row">
-                    <button id="cancelModal" class="btn-secondary">キャンセル</button>
-                    <button id="saveModal" class="btn-primary">作成</button>
+                    <button id="cancelModal" class="btn-secondary" type="button">キャンセル</button>
+                    <button id="saveModal" class="btn-primary" type="button">作成</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Extend Expiration Modal -->
+        <div id="extendLimitModal" class="modal-overlay hidden" aria-hidden="true">
+            <div class="modal-container extend-limit-modal" role="dialog" aria-modal="true" aria-labelledby="extendLimitTitle">
+                <h2 id="extendLimitTitle" class="modal-title">期限を延長</h2>
+                <p class="modal-subtext compact">期限を再設定します</p>
+
+                <label class="modal-label">期限</label>
+                <div class="limit-datetime-row">
+                    <div class="date-box" id="extendDateContainer" tabindex="0">
+                        <div class="date-display-wrapper">
+                            <span class="date-segment" data-type="year">2025</span>
+                            <span class="date-sep">/</span>
+                            <span class="date-segment" data-type="month">00</span>
+                            <span class="date-sep">/</span>
+                            <span class="date-segment" data-type="day">00</span>
+                            <span class="calendar"></span>
+                        </div>
+                    </div>
+                    <div class="time-box" id="extendTimeContainer" tabindex="0">
+                        <div class="date-display-wrapper">
+                            <span class="date-segment" data-type="hour">00</span>
+                            <span class="date-sep">:</span>
+                            <span class="date-segment" data-type="minute">00</span>
+                            <span class="clock"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="limit-preset-container" data-picker-scope="extend">
+                    <button class="limit-preset-btn-minus" data-add="-60" type="button">-1時間</button>
+                    <button class="limit-preset-btn-plus" data-add="30" type="button">+30分</button>
+                    <button class="limit-preset-btn-plus" data-add="60" type="button">+1時間</button>
+                    <button class="limit-preset-btn-plus" data-type="today" type="button">今日中</button>
+                    <button class="limit-preset-btn-plus" data-type="plus-day" type="button">次の日</button>
+                </div>
+
+                <div class="button-row">
+                    <button id="extendLimitCancelBtn" class="btn-secondary" type="button">キャンセル</button>
+                    <button id="extendLimitSaveBtn" class="btn-primary" type="button">更新</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generic Confirm Modal -->
+        <div id="confirmModal" class="modal-overlay hidden" aria-hidden="true">
+            <div class="modal-container confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+                <h2 id="confirmModalTitle" class="modal-title">確認</h2>
+                <p id="confirmModalText" class="modal-text"></p>
+                <p id="confirmModalSubtext" class="modal-subtext hidden"></p>
+                <div class="button-row confirm-button-row">
+                    <button id="confirmModalCancelBtn" class="btn-secondary" type="button">キャンセル</button>
+                    <button id="confirmModalOkBtn" class="btn-primary" type="button">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Preview Modal -->
+        <div id="passwordPreviewModal" class="modal-overlay hidden" aria-hidden="true">
+            <div class="modal-container preview-modal" role="dialog" aria-modal="true" aria-labelledby="passwordPreviewTitle">
+                <h2 id="passwordPreviewTitle" class="modal-title">パスワード</h2>
+                <div id="passwordPreviewText" class="preview-password-text"></div>
+                <div class="button-row compact">
+                    <button id="passwordPreviewCloseBtn" class="btn-secondary" type="button">閉じる</button>
+                    <button id="passwordPreviewCopyBtn" class="btn-primary" type="button">コピー</button>
                 </div>
             </div>
         </div>
@@ -161,24 +243,16 @@
         </div>
         </div>
 
-        <div class="button-group">
-            <button id="delete-all-btn" class="btn btn-delete-all">全削除</button>
+        <div class="button-group delete-all-group">
+            <button id="delete-all-btn" class="btn btn-delete-all" type="button">全削除</button>
         </div>
 
-        <script src="js/modal.js" defer></script>
+        <div id="noticeArea" class="notice-area" aria-live="polite" aria-atomic="true"></div>
+
+
+        <button id="scrollTopBtn" class="scroll-top-btn hidden" type="button" aria-label="ページ先頭に戻る">↑</button>
+
+        <script src="js/script.js" defer></script>
     </main>
 </body>
 </html>
-
-        <!-- <h3 class="card-title">表示名　●●●●●</h3>
-        <p class="small-text">あと 何時間 何分 何秒</p>
-        <p class="small-text">残り <strong>1/3</strong> 回</p>
-
-        <div class="alert">
-        <span class="alert-icon">⚠️</span>
-        <div>
-            表示回数が減っています！
-            <br>パスワードの表示回数が残りわずかです。
-        </div>
-        </div>
-    </div> -->

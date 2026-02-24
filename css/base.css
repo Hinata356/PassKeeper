@@ -105,43 +105,6 @@ body {
     background: linear-gradient(160deg, #ff9999 0%, #ff3b3b 100%);
 }
 
-/* Password Card */
-.card-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    justify-content: center;
-    justify-items: center;
-    align-items: start;
-    gap: 60px 80px;
-    max-width: 1000px;
-    margin: 80px auto;
-    padding: 0 10px;
-}
-
-.card {
-    background: white;
-    width: 100%;
-    max-width: 380px;
-    padding: 24px 28px;
-    border-radius: 22px;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
-    min-height: 180px;
-    transition: 0.25s;
-}
-
-.card.empty {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #aaa;
-    font-size: 18px;
-    border: 2px dashed #ccd4dd;
-}
-
-.card:hover {
-    transform: translateY(-4px);
-}
-
 /* Responsive */
 @media (max-width: 1100px) {
     .logo { font-size: 25px; }
@@ -190,3 +153,60 @@ body {
     .card { max-width: 600px; }
 }
 
+
+.scroll-top-btn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0, 122, 255, 0.95);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.28);
+    z-index: 1100;
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+.scroll-top-btn:hover {
+    transform: translateY(-2px);
+}
+
+.scroll-top-btn:active {
+    transform: scale(0.96);
+}
+
+.scroll-top-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+}
+
+@media (max-width: 600px) {
+    .scroll-top-btn {
+        right: 12px;
+        bottom: 12px;
+        width: 46px;
+        height: 46px;
+        font-size: 20px;
+    }
+}
+
+
+
+.button-group.delete-all-group {
+    margin-top: 16px;
+}
+
+@media (max-width: 600px) {
+    .button-group.delete-all-group {
+        margin-top: 8px;
+    }
+}

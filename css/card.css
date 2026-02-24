@@ -1,0 +1,369 @@
+/* =========================================
+   Card Grid / Layout
+   ========================================= */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: center;
+    align-items: start;
+    gap: 34px 42px;
+    max-width: 980px;
+    margin: 64px auto 28px;
+    padding: 0 10px;
+}
+
+/* =========================================
+   Card Base
+   ========================================= */
+.card {
+    width: 100%;
+    max-width: 380px;
+    min-height: 232px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(16, 24, 40, 0.08);
+    padding: 16px 16px 14px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    backdrop-filter: blur(6px);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(16, 24, 40, 0.11);
+}
+
+.card.warning {
+    border-color: rgba(255, 59, 48, 0.28);
+}
+
+/* Empty card */
+.card.empty {
+    min-height: 232px;
+    background: rgba(255, 255, 255, 0.35);
+    border: 2px dashed #cfd5dd;
+    box-shadow: none;
+    color: #7f8794;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.card.empty > * {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.card.empty:hover,
+.card.empty:focus-visible {
+    border-color: rgba(0, 122, 255, 0.45);
+    color: #007aff;
+    background: rgba(255, 255, 255, 0.55);
+    outline: none;
+}
+
+/* =========================================
+   Header
+   ========================================= */
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.card-title {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.card-title-input {
+    width: calc(100% - 4px);
+    margin-top: -2px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid #bfc7d2;
+    background: #fff;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.card-title-input:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+/* =========================================
+   Menu
+   ========================================= */
+.card-menu-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.card-menu-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    opacity: .58;
+    transition: background-color .15s ease, opacity .15s ease;
+}
+
+.card-menu-btn:hover,
+.card-menu-btn[aria-expanded="true"] {
+    opacity: 1;
+    background: rgba(15, 23, 42, 0.06);
+}
+
+.dli-more {
+    display: inline-block;
+    width: 3.6px;
+    height: 3.6px;
+    border-radius: 50%;
+    color: #374151;
+    background: currentColor;
+    position: relative;
+    box-shadow: -6px 0 0 currentColor, 6px 0 0 currentColor;
+}
+
+.card-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 138px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 12px 26px rgba(17, 24, 39, 0.14);
+    padding: 6px;
+    z-index: 20;
+}
+
+.card-menu.hidden {
+    display: none;
+}
+
+.card-menu-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    padding: 9px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+}
+
+.card-menu-item:hover {
+    background: rgba(0, 122, 255, 0.08);
+    color: #005ed1;
+}
+
+.card-menu-item.danger:hover {
+    background: rgba(255, 59, 48, 0.10);
+    color: #d92d20;
+}
+
+/* =========================================
+   Body
+   ========================================= */
+.card-body {
+    background: #f7f8fb;
+    border: 1px solid rgba(15, 23, 42, 0.04);
+    border-radius: 14px;
+    padding: 14px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.password-mask {
+    width: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: 2px;
+    color: #111827;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+}
+
+.password-mask.is-revealed {
+    letter-spacing: 0.6px;
+}
+
+.password-mask.is-overflow {
+    cursor: pointer;
+    text-decoration: underline dotted rgba(17, 24, 39, 0.25);
+    text-underline-offset: 3px;
+}
+
+.btn-reveal {
+    min-width: 92px;
+    border: 1px solid rgba(0, 122, 255, 0.18);
+    border-radius: 999px;
+    background: #fff;
+    color: #007aff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all .14s ease;
+}
+
+.btn-reveal:hover:not(:disabled) {
+    background: #007aff;
+    border-color: #007aff;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(0, 122, 255, 0.22);
+}
+
+.btn-reveal:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.card-inline-status {
+    min-height: 16px;
+    width: 100%;
+    font-size: 11px;
+    line-height: 1.2;
+    color: #8a93a2;
+    text-align: center;
+    letter-spacing: .01em;
+    opacity: 0;
+    transition: opacity .12s ease;
+}
+
+.card-inline-status.is-visible {
+    opacity: 1;
+}
+
+.card-inline-status.is-alert {
+    color: #d92d20;
+}
+
+/* =========================================
+   Footer Meta
+   ========================================= */
+.card-footer {
+    margin-top: auto;
+}
+
+.meta-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.meta-item {
+    min-width: 0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.meta-key {
+    font-size: 11px;
+    color: #97a0af;
+    white-space: nowrap;
+}
+
+.meta-text {
+    min-width: 0;
+    font-size: 12px;
+    color: #5b6472;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.meta-text strong {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.card.warning .meta-key,
+.card.warning .meta-text,
+.card.warning .meta-text strong {
+    color: #d92d20;
+}
+
+/* =========================================
+   Responsive
+   ========================================= */
+@media (max-width: 1100px) {
+    .card-container {
+        gap: 24px;
+        max-width: 760px;
+    }
+
+    .card {
+        max-width: 350px;
+    }
+}
+
+@media (max-width: 600px) {
+    .card-container {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        margin: 36px auto 20px;
+        width: 100%;
+    }
+
+    .card,
+    .card.empty {
+        max-width: none;
+        width: 100%;
+    }
+
+    .card,
+    .card.empty {
+        min-height: 214px;
+    }
+
+    .card {
+        padding: 14px;
+        border-radius: 16px;
+    }
+
+    .password-mask {
+        font-size: 20px;
+    }
+
+    .meta-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        align-items: start;
+    }
+}
+
