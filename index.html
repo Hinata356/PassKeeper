@@ -34,7 +34,7 @@
         <!-- Main button area -->
         <div class="button-group">
             <button id="create-pass-btn" class="btn btn-pass" type="button">新規パスワードを作成</button>
-            <button class="btn btn-game" type="button">ミニゲームで忘れる</button>
+            <button id="minigame-btn" class="btn btn-game" type="button">ミニゲームで忘れる</button>
         </div>
 
         <!-- Card -->
@@ -158,6 +158,53 @@
             </div>
         </div>
 
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal-overlay hidden" aria-hidden="true">
+            <div class="modal-container settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+                <h2 id="settingsTitle" class="modal-title">設定</h2>
+                <p class="modal-subtext compact">生成比率 / 除外文字 / ゴミ箱の保存日数を調整できます。</p>
+
+                <label class="modal-label">パスワード生成の割合</label>
+                <div class="settings-ratio-row is-sliders" aria-label="生成比率">
+                    <div class="settings-field settings-field-range">
+                        <label for="ratioLetters">英字</label>
+                        <input id="ratioLetters" class="settings-range" type="range" min="0" max="100" step="1" value="50" />
+                        <span id="ratioLettersVal" class="settings-range-val">50%</span>
+                    </div>
+                    <div class="settings-field settings-field-range">
+                        <label for="ratioSymbols">記号</label>
+                        <input id="ratioSymbols" class="settings-range" type="range" min="0" max="100" step="1" value="10" />
+                        <span id="ratioSymbolsVal" class="settings-range-val">10%</span>
+                    </div>
+                    <div class="settings-field settings-field-range">
+                        <label for="ratioUpper">大文字</label>
+                        <input id="ratioUpper" class="settings-range" type="range" min="0" max="100" step="1" value="50" />
+                        <span id="ratioUpperVal" class="settings-range-val">50%</span>
+                    </div>
+                </div>
+                <div class="ratio-reset-row">
+                    <button id="ratioResetBtn" class="btn-secondary small-btn" type="button">割合をリセット</button>
+                </div>
+                <div id="ratioSummary" class="settings-ratio-summary">数字: 40%（英字50% / 記号10%）</div>
+                <p class="settings-help">※「大文字」は英字の中で大文字にする割合です（小文字のみ/大文字のみを選んでいる場合はそちらが優先されます）。</p>
+
+                <label class="modal-label">含めない文字</label>
+                <input id="excludeChars" class="modal-input" type="text" placeholder="例: 0O1lI…" />
+                <p class="settings-help">入力した文字は、生成時の候補から除外されます。</p>
+
+                <label class="modal-label">ゴミ箱の保存日数</label>
+                <div class="settings-inline-row">
+                    <input id="trashRetentionDays" class="settings-num" type="number" min="1" max="30" step="1" value="30" />
+                    <span class="unit">日（最大30日）</span>
+                </div>
+
+                <div class="button-row">
+                    <button id="settingsCancelBtn" class="btn-secondary" type="button">キャンセル</button>
+                    <button id="settingsSaveBtn" class="btn-primary" type="button">保存</button>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Extend Expiration Modal -->
         <div id="extendLimitModal" class="modal-overlay hidden" aria-hidden="true">
@@ -227,6 +274,32 @@
             </div>
         </div>
 
+        <!-- Trash Modal -->
+        <div id="trashModal" class="modal-overlay hidden" aria-hidden="true">
+            <div class="modal-container trash-modal" role="dialog" aria-modal="true" aria-labelledby="trashModalTitle">
+                <h2 id="trashModalTitle" class="modal-title">ゴミ箱</h2>
+                <p id="trashRetentionSubtext" class="modal-subtext compact">削除したカードは <strong><span id="trashRetentionDaysText">30</span>日</strong> 間保存されます。</p>
+
+                <div class="trash-toolbar">
+                    <label class="trash-selectall">
+                        <input type="checkbox" id="trashSelectAll">
+                        <span>全選択</span>
+                    </label>
+                    <div class="trash-toolbar-actions">
+                        <button id="trashRestoreSelectedBtn" class="btn-secondary small-btn" type="button" disabled>選択を復元</button>
+                        <button id="trashDeleteSelectedBtn" class="btn-primary btn-danger small-btn" type="button" disabled>選択を完全削除</button>
+                        <button id="trashEmptyBtn" class="btn-primary btn-danger small-btn" type="button">ゴミ箱を空にする</button>
+                    </div>
+                </div>
+
+                <div id="trashList" class="trash-list"></div>
+
+                <div class="button-row compact">
+                    <button id="trashCloseBtn" class="btn-secondary" type="button">閉じる</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Edit Modal -->
         <div id="edit-modal" class="modal hidden">
         <div class="modal-content">
@@ -249,6 +322,13 @@
 
         <div id="noticeArea" class="notice-area" aria-live="polite" aria-atomic="true"></div>
 
+
+        <button id="trashBtn" class="trash-btn" type="button" aria-label="ゴミ箱を開く">
+            <svg class="trash-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 3h6l1 2h5v2H3V5h5l1-2zm-3 6h12l-1 13H7L6 9zm3 3v8h2v-8H9zm4 0v8h2v-8h-2z"/>
+            </svg>
+            <span id="trashBadge" class="trash-badge hidden" aria-hidden="true">0</span>
+        </button>
 
         <button id="scrollTopBtn" class="scroll-top-btn hidden" type="button" aria-label="ページ先頭に戻る">↑</button>
 

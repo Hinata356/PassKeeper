@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ミニゲームで忘れる | PassKeeper</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/card.css" />
+  <link rel="stylesheet" href="css/minigame.css" />
+</head>
+
+<body>
+  <header class="header">
+    <div class="logo">PassKeeper</div>
+    <a class="btn btn-pass" href="index.html" style="width:auto;padding:14px 22px;font-size:16px;border-radius:14px;box-shadow:none;">ホームへ戻る</a>
+  </header>
+
+  <main class="container">
+    <h1 class="main-title">ミニゲームで忘れる</h1>
+    <p class="mg-subtext">
+      <strong>ソロ神経衰弱</strong>：数字ペアを全部そろえる（ターン数が少ないほど良い）。<br />
+      <strong>数字暗記</strong>：表示された数字を覚えて入力（連続成功回数がスコア。上位5件まで保存）。
+    </p>
+
+    <div class="card-container mg-single">
+      <!-- Solo Concentration (Number pairs) -->
+      <section class="card" aria-label="ソロ神経衰弱">
+        <div class="card-header">
+          <h2 class="card-title mg-card-title" style="cursor: default;">ソロ神経衰弱</h2>
+          <div class="mg-badge" aria-label="スコア">
+            <span class="mg-badge-item">ターン: <strong id="smTurns">0</strong></span>
+            <span class="mg-badge-item">ミス: <strong id="smMiss">0</strong></span>
+            <span class="mg-badge-item">効率: <strong id="smEff">0.00</strong></span>
+            <span class="mg-badge-item">時間: <strong id="smTime">00:00</strong></span>
+            <span class="mg-badge-item">評価: <strong id="smStars">–</strong></span>
+          </div>
+        </div>
+
+        <div class="card-body mg-card-body">
+          <div id="smStatus" class="nm-status">サイズを選んで「スタート」</div>
+
+          <div class="sm-controls" aria-label="盤面サイズ">
+            <button class="sm-size" type="button" data-size="4">4×4</button>
+            <button class="sm-size" type="button" data-size="6">6×6</button>
+            <button class="sm-size" type="button" data-size="8">8×8</button>
+            <button class="sm-size" type="button" data-size="10">10×10</button>
+          </div>
+
+          <div id="smBoard" class="sm-board" aria-label="神経衰弱の盤面"></div>
+
+          <div class="mg-actions">
+            <button id="smStart" class="btn btn-game" type="button">スタート</button>
+            <button id="smRestart" class="btn btn-pass" type="button" disabled>リスタート</button>
+            <button id="smQuit" class="btn btn-quit" type="button" disabled>やめる</button>
+          </div>
+
+          <div class="mg-scoreboard" aria-label="ランキング">
+            <div class="mg-score-title">トップ5（少ないターン順）</div>
+            <ol id="smTopList" class="mg-score-list"></ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Number memory game -->
+      <section class="card" aria-label="数字暗記ゲーム">
+        <div class="card-header">
+          <h2 class="card-title mg-card-title" style="cursor: default;">数字暗記</h2>
+          <div class="mg-badge" aria-label="スコア">
+            <span class="mg-badge-item">スコア: <strong id="nmScore">0</strong></span>
+            <span class="mg-badge-item">最大桁: <strong id="nmLen">2</strong></span>
+            <span class="mg-badge-item">評価: <strong id="nmStars">–</strong></span>
+            <span class="mg-badge-item">記録: <strong id="nmBest">0</strong></span>
+          </div>
+        </div>
+
+        <div class="card-body mg-card-body">
+          <div id="nmStatus" class="nm-status">「スタート」で開始</div>
+          <div id="nmDisplay" class="nm-display" aria-live="polite">–</div>
+
+          <div id="nmInputArea" class="nm-input-area hidden" aria-label="入力エリア">
+            <div class="nm-typed-wrap">
+              <div class="nm-typed-label">入力</div>
+              <div id="nmTyped" class="nm-typed" aria-label="入力中"></div>
+              <button id="nmClear" class="nm-clear" type="button" aria-label="クリア">×</button>
+            </div>
+
+            <div class="nm-pad" aria-label="テンキー">
+              <button class="nm-key" data-digit="1" type="button">1</button>
+              <button class="nm-key" data-digit="2" type="button">2</button>
+              <button class="nm-key" data-digit="3" type="button">3</button>
+              <button class="nm-key" data-digit="4" type="button">4</button>
+              <button class="nm-key" data-digit="5" type="button">5</button>
+              <button class="nm-key" data-digit="6" type="button">6</button>
+              <button class="nm-key" data-digit="7" type="button">7</button>
+              <button class="nm-key" data-digit="8" type="button">8</button>
+              <button class="nm-key" data-digit="9" type="button">9</button>
+              <button class="nm-key nm-key-sub" id="nmBack" type="button">⌫</button>
+              <button class="nm-key" data-digit="0" type="button">0</button>
+              <button class="nm-key nm-key-ok" id="nmOk" type="button">OK</button>
+            </div>
+          </div>
+
+          <div class="mg-actions">
+            <button id="nmStart" class="btn btn-game" type="button">スタート</button>
+            <button id="nmRestart" class="btn btn-pass" type="button" disabled>リスタート</button>
+            <button id="nmQuit" class="btn btn-quit" type="button" disabled>やめる</button>
+          </div>
+
+          <div class="mg-scoreboard" aria-label="ハイスコア">
+            <div class="mg-score-title">トップ5</div>
+            <ol id="nmTopList" class="mg-score-list"></ol>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <button id="scrollTopBtn" class="scroll-top-btn hidden" type="button" aria-label="ページ先頭に戻る">↑</button>
+  </main>
+
+  <script src="js/minigame.js" defer></script>
+</body>
+</html>

@@ -5,6 +5,7 @@
 // ---------- Element References ----------
 const modal = document.getElementById("passwordModal");
 const createBtn = document.getElementById("create-pass-btn");
+const minigameBtn = document.getElementById("minigame-btn") || document.querySelector(".btn-game");
 const cancelBtn = document.getElementById("cancelModal");
 const saveBtn = document.getElementById("saveModal");
 const cardContainer = document.getElementById("passwordCardContainer") || document.querySelector(".card-container");
@@ -51,6 +52,35 @@ const passwordPreviewCopyBtn = document.getElementById("passwordPreviewCopyBtn")
 const noticeArea = document.getElementById("noticeArea");
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 
+// Settings
+const settingsBtn = document.getElementById("settings-btn");
+const settingsModal = document.getElementById("settingsModal");
+const settingsCancelBtn = document.getElementById("settingsCancelBtn");
+const settingsSaveBtn = document.getElementById("settingsSaveBtn");
+const ratioLettersInput = document.getElementById("ratioLetters");
+const ratioSymbolsInput = document.getElementById("ratioSymbols");
+const ratioUpperInput = document.getElementById("ratioUpper");
+const ratioSummary = document.getElementById("ratioSummary");
+const ratioLettersVal = document.getElementById("ratioLettersVal");
+const ratioSymbolsVal = document.getElementById("ratioSymbolsVal");
+const ratioUpperVal = document.getElementById("ratioUpperVal");
+const ratioResetBtn = document.getElementById("ratioResetBtn");
+const excludeCharsInput = document.getElementById("excludeChars");
+const trashRetentionDaysInput = document.getElementById("trashRetentionDays");
+const trashRetentionDaysText = document.getElementById("trashRetentionDaysText");
+
+// Trash (Recycle bin)
+const trashBtn = document.getElementById("trashBtn");
+const trashBadge = document.getElementById("trashBadge");
+const trashModal = document.getElementById("trashModal");
+const trashList = document.getElementById("trashList");
+const trashSelectAll = document.getElementById("trashSelectAll");
+const trashRestoreSelectedBtn = document.getElementById("trashRestoreSelectedBtn");
+const trashDeleteSelectedBtn = document.getElementById("trashDeleteSelectedBtn");
+const trashEmptyBtn = document.getElementById("trashEmptyBtn");
+const trashCloseBtn = document.getElementById("trashCloseBtn");
+
+
 // ---------- Constants ----------
 const numbers = "0123456789";
 const lowerLetters = "abcdefghijklmnopqrstuvwxyz";
@@ -62,11 +92,176 @@ const TITLE_PREVIEW_LENGTH = 10;
 const MASK_DOT_COUNT = 8;
 const REVEAL_AUTO_HIDE_MS = 5 * 60 * 1000;
 const STORAGE_KEY = "passkeeper.cards.v2";
+const TRASH_KEY = "passkeeper.trash.v1";
+const SETTINGS_KEY = "passkeeper.settings.v1";
+
+const DEFAULT_SETTINGS = Object.freeze({
+    ratioLetters: 50,          // % of total length (letters)
+    ratioSymbols: 10,          // % of total length (symbols)
+    ratioUpper: 50,            // % of letters (uppercase)
+    excludeChars: "",          // chars to exclude from generation pool
+    trashRetentionDays: 30     // 1..30
+});
+
+let appSettings = { ...DEFAULT_SETTINGS };
 
 let activeMenuCard = null;
 let pendingConfirmAction = null;
 let extendTargetCard = null;
 let previewPasswordCache = "";
+let trashTicker = null;
+
+// ---------- Settings ----------
+function clampInt(val, min, max, fallback) {
+    const n = parseInt(String(val ?? ""), 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+}
+
+function normalizeSettings(next = {}) {
+    const ratioLetters = clampInt(next.ratioLetters, 0, 100, DEFAULT_SETTINGS.ratioLetters);
+    let ratioSymbols = clampInt(next.ratioSymbols, 0, 100, DEFAULT_SETTINGS.ratioSymbols);
+    const ratioUpper = clampInt(next.ratioUpper, 0, 100, DEFAULT_SETTINGS.ratioUpper);
+    const excludeChars = String(next.excludeChars ?? DEFAULT_SETTINGS.excludeChars);
+    const trashRetentionDays = clampInt(next.trashRetentionDays, 1, 30, DEFAULT_SETTINGS.trashRetentionDays);
+
+    // ensure letters + symbols <= 100
+    if (ratioLetters + ratioSymbols > 100) {
+        ratioSymbols = Math.max(0, 100 - ratioLetters);
+    }
+
+    return { ratioLetters, ratioSymbols, ratioUpper, excludeChars, trashRetentionDays };
+}
+
+function loadSettingsFromStorage() {
+    try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) return { ...DEFAULT_SETTINGS };
+        const parsed = JSON.parse(raw);
+        return normalizeSettings({ ...DEFAULT_SETTINGS, ...(parsed || {}) });
+    } catch {
+        return { ...DEFAULT_SETTINGS };
+    }
+}
+
+function saveSettingsToStorage(settings) {
+    try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(normalizeSettings(settings)));
+    } catch {
+        // ignore
+    }
+}
+
+function getTrashRetentionDays() {
+    return clampInt(appSettings?.trashRetentionDays, 1, 30, DEFAULT_SETTINGS.trashRetentionDays);
+}
+
+function getTrashRetentionMs() {
+    return getTrashRetentionDays() * 24 * 60 * 60 * 1000;
+}
+
+function updateTrashRetentionText() {
+    const days = getTrashRetentionDays();
+    if (trashRetentionDaysText) trashRetentionDaysText.textContent = String(days);
+}
+
+function updateRatioValueLabels() {
+    const letters = clampInt(ratioLettersInput?.value, 0, 100, appSettings.ratioLetters);
+    const symbols = clampInt(ratioSymbolsInput?.value, 0, 100, appSettings.ratioSymbols);
+    const upper = clampInt(ratioUpperInput?.value, 0, 100, appSettings.ratioUpper);
+
+    if (ratioLettersVal) ratioLettersVal.textContent = `${letters}%`;
+    if (ratioSymbolsVal) ratioSymbolsVal.textContent = `${symbols}%`;
+    if (ratioUpperVal) ratioUpperVal.textContent = `${upper}%`;
+}
+
+function updateRatioSummaryText() {
+    updateRatioValueLabels();
+    if (!ratioSummary) return;
+    const letters = clampInt(ratioLettersInput?.value, 0, 100, appSettings.ratioLetters);
+    const symbols = clampInt(ratioSymbolsInput?.value, 0, 100, appSettings.ratioSymbols);
+    const digits = Math.max(0, 100 - letters - symbols);
+    ratioSummary.textContent = `数字: ${digits}%（英字${letters}% / 記号${symbols}%）`;
+}
+
+function enforceRatioConstraint(changed) {
+    if (!ratioLettersInput || !ratioSymbolsInput) return;
+    let letters = clampInt(ratioLettersInput.value, 0, 100, appSettings.ratioLetters);
+    let symbolsPct = clampInt(ratioSymbolsInput.value, 0, 100, appSettings.ratioSymbols);
+    if (letters + symbolsPct <= 100) {
+        ratioLettersInput.value = String(letters);
+        ratioSymbolsInput.value = String(symbolsPct);
+        updateRatioSummaryText();
+        return;
+    }
+
+    if (changed === 'letters') {
+        symbolsPct = Math.max(0, 100 - letters);
+        ratioSymbolsInput.value = String(symbolsPct);
+    } else {
+        letters = Math.max(0, 100 - symbolsPct);
+        ratioLettersInput.value = String(letters);
+    }
+    updateRatioSummaryText();
+}
+
+function applySettingsToUI() {
+    if (ratioLettersInput) ratioLettersInput.value = String(appSettings.ratioLetters);
+    if (ratioSymbolsInput) ratioSymbolsInput.value = String(appSettings.ratioSymbols);
+    if (ratioUpperInput) ratioUpperInput.value = String(appSettings.ratioUpper);
+    if (excludeCharsInput) excludeCharsInput.value = String(appSettings.excludeChars || "");
+    if (trashRetentionDaysInput) trashRetentionDaysInput.value = String(getTrashRetentionDays());
+    updateTrashRetentionText();
+    updateRatioValueLabels();
+    updateRatioSummaryText();
+}
+
+function openSettingsModal() {
+    appSettings = loadSettingsFromStorage();
+    applySettingsToUI();
+    openOverlay(settingsModal);
+}
+
+function closeSettingsModal() {
+    closeOverlay(settingsModal);
+}
+
+function saveSettingsFromModal() {
+    const next = normalizeSettings({
+        ratioLetters: ratioLettersInput?.value,
+        ratioSymbols: ratioSymbolsInput?.value,
+        ratioUpper: ratioUpperInput?.value,
+        excludeChars: excludeCharsInput?.value,
+        trashRetentionDays: trashRetentionDaysInput?.value
+    });
+
+    appSettings = next;
+    saveSettingsToStorage(appSettings);
+    updateTrashRetentionText();
+
+    // prune trash immediately with the latest retention setting
+    const before = loadTrashFromStorage();
+    const after = normalizeAndPruneTrash(before);
+    if (after.length !== (Array.isArray(before) ? before.length : 0)) {
+        saveTrashToStorage(after);
+        updateTrashBadge();
+        if (!trashModal?.classList.contains('hidden')) renderTrashList();
+    }
+
+    closeSettingsModal();
+    showNotice('設定を保存しました。', 'success');
+}
+
+
+function resetRatiosToDefault() {
+    if (!ratioLettersInput || !ratioSymbolsInput || !ratioUpperInput) return;
+    ratioLettersInput.value = String(DEFAULT_SETTINGS.ratioLetters);
+    ratioSymbolsInput.value = String(DEFAULT_SETTINGS.ratioSymbols);
+    ratioUpperInput.value = String(DEFAULT_SETTINGS.ratioUpper);
+    enforceRatioConstraint('letters');
+    updateRatioSummaryText();
+    showNotice('割合をリセットしました。（保存はまだです）', 'info');
+}
 
 // ---------- Utilities ----------
 function showNotice(message, type = "info") {
@@ -111,13 +306,22 @@ function formatHMS(ms) {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function formatDDHHMMSS(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const sec = totalSec % 60;
+    const dd = String(d).padStart(2, "0");
+    const hh = String(h).padStart(2, "0");
+    const mm = String(m).padStart(2, "0");
+    const ss = String(sec).padStart(2, "0");
+    return `${dd}日${hh}時間${mm}分${ss}秒`;
+}
+
 function formatRemainingTime(ms) {
     if (ms <= 0) return "期限切れ";
-    const totalSec = Math.floor(ms / 1000);
-    const h = String(Math.floor(totalSec / 3600)).padStart(2, "0");
-    const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-    const s = String(totalSec % 60).padStart(2, "0");
-    return `あと ${h}:${m}:${s}`;
+    return formatDDHHMMSS(ms);
 }
 
 function clampTitle(title) {
@@ -152,6 +356,28 @@ function getNextUntitledName() {
     return `未設定${next}`;
 }
 
+
+function getUsedTitleSet() {
+    return new Set(
+        getCards()
+            .map(card => card.querySelector(".card-title")?.dataset.fullTitle || "")
+            .filter(Boolean)
+    );
+}
+
+/**
+ * If title is duplicated, auto-append sequential number (1,2,3...) to the end.
+ * ex: "メモ" -> "メモ1" -> "メモ2"
+ */
+function ensureUniqueTitle(desiredTitle) {
+    const base = clampTitle(String(desiredTitle ?? "").trim() || "未設定");
+    const used = getUsedTitleSet();
+    if (!used.has(base)) return base;
+
+    let n = 1;
+    while (used.has(`${base}${n}`)) n += 1;
+    return `${base}${n}`;
+}
 function maskPassword() {
     return "●".repeat(MASK_DOT_COUNT);
 }
@@ -222,6 +448,284 @@ function showPasswordPreview(password) {
 function closePasswordPreview() {
     closeOverlay(passwordPreviewModal);
 }
+// ---------- Trash modal ----------
+function openTrashModal() {
+    updateTrashBadge();
+    renderTrashList();
+    openOverlay(trashModal);
+    startTrashTicker();
+}
+
+function closeTrashModal() {
+    stopTrashTicker();
+    closeOverlay(trashModal);
+}
+
+function getSelectedTrashIds() {
+    if (!trashList) return [];
+    return Array.from(trashList.querySelectorAll('.trash-checkbox:checked'))
+        .map(el => el.getAttribute('data-trash-id'))
+        .filter(Boolean);
+}
+
+function setTrashActionButtonsState() {
+    const selected = getSelectedTrashIds();
+    const hasSelected = selected.length > 0;
+    if (trashRestoreSelectedBtn) trashRestoreSelectedBtn.disabled = !hasSelected;
+    if (trashDeleteSelectedBtn) trashDeleteSelectedBtn.disabled = !hasSelected;
+}
+
+function syncTrashSelectAllState() {
+    if (!trashSelectAll || !trashList) return;
+    const all = Array.from(trashList.querySelectorAll('.trash-checkbox'));
+    const checked = all.filter(cb => cb.checked);
+    trashSelectAll.checked = all.length > 0 && checked.length === all.length;
+    trashSelectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+    setTrashActionButtonsState();
+}
+
+function renderTrashList() {
+    if (!trashList) return;
+    const items = getTrashItems();
+
+    trashList.innerHTML = '';
+    if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'trash-empty';
+        empty.textContent = 'ゴミ箱は空です。';
+        trashList.appendChild(empty);
+        if (trashSelectAll) {
+            trashSelectAll.checked = false;
+            trashSelectAll.indeterminate = false;
+        }
+        setTrashActionButtonsState();
+        return;
+    }
+
+    items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'trash-item';
+        row.dataset.trashId = item.trashId;
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'trash-checkbox';
+        checkbox.setAttribute('data-trash-id', item.trashId);
+        checkbox.addEventListener('change', syncTrashSelectAllState);
+
+        const left = document.createElement('div');
+        left.appendChild(checkbox);
+
+        const main = document.createElement('div');
+
+        const title = document.createElement('p');
+        title.className = 'trash-item-title';
+        title.textContent = item.title || '未設定';
+
+        const passRow = document.createElement('div');
+        passRow.className = 'trash-item-pass';
+
+        const passText = document.createElement('span');
+        passText.className = 'trash-pass-text';
+        const rawPassword = String(item.password || '');
+
+        const expiresAtMs = new Date(item.expiresAt || '').getTime();
+        const withinLimit = Number.isFinite(expiresAtMs) && expiresAtMs > Date.now();
+
+        passText.textContent = maskPassword();
+        passText.dataset.revealed = 'false';
+        passText.title = '';
+        passText.addEventListener('click', () => {
+            if (passText.dataset.revealed === 'true') showPasswordPreview(rawPassword);
+        });
+
+        const revealBtn = document.createElement('button');
+        revealBtn.type = 'button';
+        revealBtn.className = 'btn-secondary small-btn';
+        revealBtn.classList.add('js-trash-reveal-btn');
+        revealBtn.textContent = withinLimit ? '期限内' : '表示';
+        revealBtn.disabled = withinLimit;
+        revealBtn.addEventListener('click', () => {
+            const expiresAt = new Date(row.dataset.expiresAt || '').getTime();
+            const withinNow = Number.isFinite(expiresAt) && expiresAt > Date.now();
+            if (withinNow) return; // safety
+            const nowRevealed = passText.dataset.revealed !== 'true';
+            passText.dataset.revealed = nowRevealed ? 'true' : 'false';
+            passText.textContent = nowRevealed ? rawPassword : maskPassword();
+            revealBtn.textContent = nowRevealed ? '隠す' : '表示';
+            passText.title = nowRevealed ? rawPassword : '';
+        });
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'btn-primary small-btn';
+        copyBtn.classList.add('js-trash-copy-btn');
+        copyBtn.textContent = 'コピー';
+        copyBtn.disabled = withinLimit;
+        copyBtn.addEventListener('click', async () => {
+            const expiresAt = new Date(row.dataset.expiresAt || '').getTime();
+            const withinNow = Number.isFinite(expiresAt) && expiresAt > Date.now();
+            if (withinNow) return; // safety
+            try {
+                await navigator.clipboard.writeText(rawPassword);
+                showNotice('コピーしました。', 'success');
+            } catch {
+                showNotice('コピーに失敗しました。', 'error');
+            }
+        });
+
+        passRow.append(passText, revealBtn, copyBtn);
+
+        const meta = document.createElement('div');
+        meta.className = 'trash-meta';
+        const remain = document.createElement('span');
+        remain.className = 'js-trash-remaining';
+        remain.dataset.deletedAt = item.deletedAt || new Date().toISOString();
+        meta.innerHTML = '<span>自動削除まで</span>';
+        meta.appendChild(remain);
+
+        const lock = document.createElement('span');
+        lock.className = 'trash-lock-note js-trash-lock-note';
+        lock.dataset.expiresAt = item.expiresAt || '';
+        lock.textContent = withinLimit ? '期限内（表示・コピー不可）' : '期限切れ';
+        meta.appendChild(lock);
+
+        main.append(title, passRow, meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'trash-row-actions';
+
+        const restoreBtn = document.createElement('button');
+        restoreBtn.type = 'button';
+        restoreBtn.className = 'btn-secondary small-btn';
+        restoreBtn.textContent = '復元';
+        restoreBtn.addEventListener('click', () => restoreTrashItems([item.trashId]));
+
+        const purgeBtn = document.createElement('button');
+        purgeBtn.type = 'button';
+        purgeBtn.className = 'btn-primary btn-danger small-btn';
+        purgeBtn.textContent = '完全削除';
+        purgeBtn.addEventListener('click', () => purgeTrashItems([item.trashId]));
+
+        actions.append(restoreBtn, purgeBtn);
+
+        row.append(left, main, actions);
+        row.dataset.expiresAt = item.expiresAt || '';
+        trashList.appendChild(row);
+    });
+
+    syncTrashSelectAllState();
+    tickTrashRemaining();
+}
+
+function tickTrashRemaining() {
+    if (!trashList) return;
+    const now = Date.now();
+
+    trashList.querySelectorAll('.js-trash-remaining').forEach(node => {
+        const deletedAtMs = new Date(node.dataset.deletedAt || '').getTime();
+        const expireMs = (Number.isFinite(deletedAtMs) ? deletedAtMs : now) + getTrashRetentionMs();
+        const diff = expireMs - now;
+        node.textContent = diff > 0 ? formatDDHHMMSS(diff) : '期限切れ';
+    });
+
+    // also update "within limit" lock state (card expiration)
+    trashList.querySelectorAll('.trash-item').forEach(row => {
+        const expiresAtMs = new Date(row.dataset.expiresAt || '').getTime();
+        const withinLimit = Number.isFinite(expiresAtMs) && expiresAtMs > now;
+
+        const passText = row.querySelector('.trash-pass-text');
+        const revealBtn = row.querySelector('.js-trash-reveal-btn');
+        const copyBtn = row.querySelector('.js-trash-copy-btn');
+        const lockNote = row.querySelector('.js-trash-lock-note');
+
+        if (lockNote) lockNote.textContent = withinLimit ? '期限内（表示・コピー不可）' : '期限切れ';
+
+        if (revealBtn) {
+            revealBtn.disabled = withinLimit;
+            if (withinLimit) {
+                revealBtn.textContent = '期限内';
+                if (passText) {
+                    passText.dataset.revealed = 'false';
+                    passText.textContent = maskPassword();
+                    passText.title = '';
+                }
+            } else if (passText) {
+                revealBtn.textContent = passText.dataset.revealed === 'true' ? '隠す' : '表示';
+            }
+        }
+
+        if (copyBtn) copyBtn.disabled = withinLimit;
+    });
+
+    // prune while ticking
+    const before = loadTrashFromStorage();
+    const after = normalizeAndPruneTrash(before);
+    if (after.length !== (Array.isArray(before) ? before.length : 0)) {
+        saveTrashToStorage(after);
+        updateTrashBadge();
+        if (!trashModal?.classList.contains('hidden')) renderTrashList();
+    }
+}
+
+function startTrashTicker() {
+    stopTrashTicker();
+    tickTrashRemaining();
+    trashTicker = setInterval(tickTrashRemaining, 1000);
+}
+
+function stopTrashTicker() {
+    if (trashTicker) {
+        clearInterval(trashTicker);
+        trashTicker = null;
+    }
+}
+
+function restoreTrashItems(trashIds = []) {
+    const set = new Set(trashIds);
+    const items = getTrashItems();
+    const toRestore = items.filter(it => set.has(it.trashId));
+    if (!toRestore.length) return;
+
+    toRestore.forEach(it => {
+        const expiresAt = new Date(it.expiresAt);
+        const card = buildCardElement({
+            id: it.id || generateId(),
+            title: ensureUniqueTitle(it.title || getNextUntitledName()),
+            password: String(it.password || ''),
+            expiresAt: Number.isNaN(expiresAt.getTime()) ? new Date(Date.now() + 30 * 60 * 1000) : expiresAt,
+            emergencyLimit: Math.max(0, parseInt(it.emergencyLimit || '0', 10) || 0),
+            remaining: Math.max(0, parseInt(((it.remaining ?? it.emergencyLimit) ?? '0'), 10) || 0),
+            masked: true,
+            revealUntil: null
+        });
+        insertCard(card);
+    });
+
+    removeTrashByIds(Array.from(set));
+    saveCardsToStorage();
+    showNotice('復元しました。', 'success');
+    renderTrashList();
+}
+
+function purgeTrashItems(trashIds = []) {
+    const count = trashIds.length;
+    if (count <= 0) return;
+
+    showConfirmDialog({
+        title: '完全削除の確認',
+        text: count === 1 ? '選択したパスワードを完全に削除しますか？' : `選択した ${count} 件を完全に削除しますか？`,
+        subtext: 'この操作は取り消せません。',
+        okText: '完全削除',
+        danger: true,
+        onConfirm: () => {
+            removeTrashByIds(trashIds);
+            renderTrashList();
+            showNotice('完全に削除しました。', 'info');
+        }
+    });
+}
+
 
 // ---------- Persistence ----------
 function serializeCard(card) {
@@ -260,6 +764,97 @@ function loadCardsFromStorage() {
     }
 }
 
+
+
+// ---------- Trash (Recycle bin) persistence ----------
+function loadTrashFromStorage() {
+    try {
+        const raw = localStorage.getItem(TRASH_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed;
+    } catch (err) {
+        console.error("loadTrashFromStorage failed", err);
+        return [];
+    }
+}
+
+function saveTrashToStorage(items) {
+    try {
+        localStorage.setItem(TRASH_KEY, JSON.stringify(Array.isArray(items) ? items : []));
+    } catch (err) {
+        console.error("saveTrashToStorage failed", err);
+    }
+}
+
+function generateTrashId() {
+    return `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeAndPruneTrash(items) {
+    const now = Date.now();
+    const out = [];
+
+    (Array.isArray(items) ? items : []).forEach(item => {
+        if (!item || typeof item !== "object") return;
+
+        const deletedAt = item.deletedAt ? new Date(item.deletedAt) : null;
+        const deletedAtMs = deletedAt && !Number.isNaN(deletedAt.getTime()) ? deletedAt.getTime() : now;
+        const expireMs = deletedAtMs + getTrashRetentionMs();
+        if (expireMs <= now) return;
+
+        const trashId = item.trashId || generateTrashId();
+        out.push({ ...item, trashId, deletedAt: new Date(deletedAtMs).toISOString() });
+    });
+
+    out.sort((a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime());
+    return out;
+}
+
+function getTrashItems() {
+    const items = normalizeAndPruneTrash(loadTrashFromStorage());
+    // keep storage normalized
+    saveTrashToStorage(items);
+    return items;
+}
+
+function addTrashEntries(entries) {
+    const current = getTrashItems();
+    const next = normalizeAndPruneTrash([
+        ...entries.map(e => ({ ...e, trashId: e.trashId || generateTrashId() })),
+        ...current
+    ]);
+    saveTrashToStorage(next);
+    updateTrashBadge();
+    return next;
+}
+
+function removeTrashByIds(trashIds = []) {
+    const set = new Set(trashIds);
+    const current = getTrashItems();
+    const next = current.filter(item => !set.has(item.trashId));
+    saveTrashToStorage(next);
+    updateTrashBadge();
+    return next;
+}
+
+function clearTrash() {
+    saveTrashToStorage([]);
+    updateTrashBadge();
+}
+
+function updateTrashBadge() {
+    if (!trashBadge) return;
+    const count = getTrashItems().length;
+    trashBadge.textContent = count > 99 ? "99+" : String(count);
+    trashBadge.classList.toggle("hidden", count <= 0);
+}
+
+function buildTrashEntryFromCard(card) {
+    const data = serializeCard(card);
+    return { ...data, trashId: generateTrashId(), deletedAt: new Date().toISOString() };
+}
 // ---------- Create modal state ----------
 function resetPasswordModal() {
     autoRadio.checked = true;
@@ -330,21 +925,154 @@ function generatePassword() {
     const length = Math.max(1, Math.min(99, parseInt(pwLength.value || "4", 10)));
     const selectedCharType = document.querySelector("input[name='charType']:checked")?.value || "num";
 
-    let charPool = "";
-    if (selectedCharType === "num") charPool = numbers;
-    else if (selectedCharType === "al") charPool = lowerLetters + upperLetters;
-    else if (selectedCharType === "alnum") charPool = numbers + lowerLetters + upperLetters;
+    // Always keep in sync (settings modal can be opened without reload)
+    appSettings = loadSettingsFromStorage();
 
-    if (lowerCase.checked && !upperCase.checked) charPool = lowerLetters;
-    if (upperCase.checked && !lowerCase.checked) charPool = upperLetters;
-    if (includeSymbols.checked) charPool += symbols;
-    if (!charPool.length) charPool = numbers;
+    const excludeSet = new Set(String(appSettings.excludeChars || "").split(""));
+    const filterPool = (pool) => String(pool).split("").filter(ch => !excludeSet.has(ch)).join("");
 
-    let password = "";
-    for (let i = 0; i < length; i++) {
-        password += charPool[Math.floor(Math.random() * charPool.length)];
+    let digitsPool = filterPool(numbers);
+    let lowerPool = filterPool(lowerLetters);
+    let upperPool = filterPool(upperLetters);
+    let symbolPool = filterPool(symbols);
+
+    const symbolsEnabled = !!includeSymbols?.checked;
+    const lettersEnabled = selectedCharType !== "num";
+    const digitsEnabled = selectedCharType !== "al";
+
+    // user ratio: letters/symbols (total), digits = remainder
+    let lettersPct = clampInt(appSettings.ratioLetters, 0, 100, DEFAULT_SETTINGS.ratioLetters);
+    let symbolsPct = clampInt(appSettings.ratioSymbols, 0, 100, DEFAULT_SETTINGS.ratioSymbols);
+    if (lettersPct + symbolsPct > 100) symbolsPct = Math.max(0, 100 - lettersPct);
+    let digitsPct = Math.max(0, 100 - lettersPct - symbolsPct);
+
+    // redistribute to available categories
+    if (!symbolsEnabled) {
+        digitsPct += symbolsPct;
+        symbolsPct = 0;
     }
-    pwDisplay.value = password;
+    if (!lettersEnabled) {
+        digitsPct += lettersPct;
+        lettersPct = 0;
+    }
+    if (!digitsEnabled) {
+        lettersPct += digitsPct;
+        digitsPct = 0;
+    }
+
+    const percentMap = {
+        digits: digitsPct,
+        letters: lettersPct,
+        symbols: symbolsPct
+    };
+
+    function allocateCounts(total, pctByKey) {
+        const keys = Object.keys(pctByKey);
+        const raw = keys.map(k => ({ k, v: (total * (pctByKey[k] || 0)) / 100 }));
+        const base = Object.fromEntries(raw.map(r => [r.k, Math.floor(r.v)]));
+        let used = Object.values(base).reduce((a, b) => a + b, 0);
+        let remain = total - used;
+        raw
+            .map(r => ({ k: r.k, frac: r.v - Math.floor(r.v) }))
+            .sort((a, b) => b.frac - a.frac)
+            .forEach(({ k }) => {
+                if (remain <= 0) return;
+                base[k] += 1;
+                remain -= 1;
+            });
+        return base;
+    }
+
+    let counts = allocateCounts(length, percentMap);
+
+    // If a pool is empty, move its counts to other available pools.
+    const poolByKey = {
+        digits: digitsPool,
+        letters: (lowerPool + upperPool),
+        symbols: symbolPool
+    };
+    const keysOrder = ["digits", "letters", "symbols"]; // fallback preference
+    keysOrder.forEach(src => {
+        if (counts[src] <= 0) return;
+        if (poolByKey[src] && poolByKey[src].length) return;
+        // move src counts away
+        let move = counts[src];
+        counts[src] = 0;
+        while (move > 0) {
+            const dst = keysOrder.find(k => k !== src && (poolByKey[k] && poolByKey[k].length));
+            if (!dst) break;
+            counts[dst] += 1;
+            move -= 1;
+        }
+    });
+
+    // If everything is excluded, fall back to digits
+    if ((!digitsPool || !digitsPool.length) && (!lowerPool && !upperPool) && (!symbolPool || !symbolPool.length)) {
+        digitsPool = numbers;
+        counts = { digits: length, letters: 0, symbols: 0 };
+        showNotice("除外文字の影響で候補がなくなったため、数字のみで生成しました。", "info");
+    }
+
+    // split letters into lower/upper
+    const upperPct = clampInt(appSettings.ratioUpper, 0, 100, DEFAULT_SETTINGS.ratioUpper);
+    let upperCount = 0;
+    let lowerCount = 0;
+    if (counts.letters > 0) {
+        if (lowerCase?.checked && !upperCase?.checked) {
+            lowerCount = counts.letters;
+        } else if (upperCase?.checked && !lowerCase?.checked) {
+            upperCount = counts.letters;
+        } else {
+            upperCount = Math.round((counts.letters * upperPct) / 100);
+            upperCount = Math.max(0, Math.min(counts.letters, upperCount));
+            lowerCount = counts.letters - upperCount;
+        }
+
+        // if some pool is empty, shift within letters
+        if (upperCount > 0 && (!upperPool || !upperPool.length)) {
+            lowerCount += upperCount;
+            upperCount = 0;
+        }
+        if (lowerCount > 0 && (!lowerPool || !lowerPool.length)) {
+            upperCount += lowerCount;
+            lowerCount = 0;
+        }
+    }
+
+    // build characters
+    const chars = [];
+    const randFrom = (pool) => pool[Math.floor(Math.random() * pool.length)];
+
+    for (let i = 0; i < (counts.digits || 0); i++) {
+        if (!digitsPool?.length) break;
+        chars.push(randFrom(digitsPool));
+    }
+    for (let i = 0; i < lowerCount; i++) {
+        if (!lowerPool?.length) break;
+        chars.push(randFrom(lowerPool));
+    }
+    for (let i = 0; i < upperCount; i++) {
+        if (!upperPool?.length) break;
+        chars.push(randFrom(upperPool));
+    }
+    for (let i = 0; i < (counts.symbols || 0); i++) {
+        if (!symbolPool?.length) break;
+        chars.push(randFrom(symbolPool));
+    }
+
+    // if counts got reduced due to empty pools, refill with any available pool
+    const allPool = (digitsPool || "") + (lowerPool || "") + (upperPool || "") + (symbolsEnabled ? (symbolPool || "") : "");
+    while (chars.length < length && allPool.length) {
+        chars.push(randFrom(allPool));
+    }
+
+    // shuffle
+    for (let i = chars.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+
+    pwDisplay.value = chars.join("");
 }
 
 // ---------- Generic custom date/time picker ----------
@@ -590,7 +1318,8 @@ function applyCardTitleUI(titleEl, rawTitle) {
     if (!titleEl) return;
     const safeFullTitle = clampTitle((rawTitle || "").trim() || "未設定");
     titleEl.dataset.fullTitle = safeFullTitle;
-    titleEl.textContent = getTitlePreview(safeFullTitle);
+    // Show full title; actual visible range is controlled by CSS width (ellipsis)
+    titleEl.textContent = safeFullTitle;
     titleEl.title = safeFullTitle;
 
     if (!titleEl.dataset.bindInlineEdit) {
@@ -919,21 +1648,27 @@ function insertCard(card) {
     }
 }
 
-function deleteCard(card, { silent = false } = {}) {
+function deleteCard(card, { silent = false, skipSave = false } = {}) {
     if (!card) return;
+
+    const entry = buildTrashEntryFromCard(card);
+    addTrashEntries([entry]);
+
     clearCardTimers(card);
     if (activeMenuCard === card) activeMenuCard = null;
     card.remove();
-    saveCardsToStorage();
-    if (!silent) showNotice("カードを削除しました。", "info");
+
+    if (!skipSave) saveCardsToStorage();
+    if (!silent) showNotice("ゴミ箱に移動しました。", "info");
 }
 
 function askDeleteSingleCard(card) {
     const title = card.querySelector(".card-title")?.dataset.fullTitle || "このカード";
+    const days = getTrashRetentionDays();
     showConfirmDialog({
         title: "削除の確認",
-        text: `「${title}」を削除しますか？`,
-        subtext: "この操作は取り消せません。",
+        text: `「${title}」をゴミ箱に移動しますか？`,
+        subtext: `ゴミ箱の中で${days}日間保存されます（復元・完全削除が可能）。`,
         okText: "削除する",
         danger: true,
         onConfirm: () => deleteCard(card)
@@ -941,12 +1676,25 @@ function askDeleteSingleCard(card) {
 }
 
 function deleteAllCards() {
-    getCards().forEach(card => {
+    const cards = getCards();
+    if (!cards.length) {
+        showNotice("削除するカードはありません。", "info");
+        return;
+    }
+
+    const entries = cards.map(card => buildTrashEntryFromCard(card));
+
+    closeCardMenu();
+    activeMenuCard = null;
+
+    cards.forEach(card => {
         clearCardTimers(card);
         card.remove();
     });
+
+    addTrashEntries(entries);
     localStorage.removeItem(STORAGE_KEY);
-    showNotice("すべてのカードを削除しました。", "info");
+    showNotice("すべてのカードをゴミ箱に移動しました。", "info");
 }
 
 function askDeleteAllCards() {
@@ -955,10 +1703,11 @@ function askDeleteAllCards() {
         showNotice("削除するカードはありません。", "info");
         return;
     }
+    const days = getTrashRetentionDays();
     showConfirmDialog({
         title: "全削除の確認",
-        text: "保存済みのパスワードカードをすべて削除します。",
-        subtext: `対象件数: ${count}件（取り消し不可）`,
+        text: "保存済みのパスワードカードをすべてゴミ箱に移動します。",
+        subtext: `対象件数: ${count}件（${days}日間保存）`,
         okText: "全削除する",
         danger: true,
         onConfirm: deleteAllCards
@@ -1011,7 +1760,8 @@ function saveNewCardFromModal() {
     if (autoRadio.checked && !pwDisplay.value.trim()) generatePassword();
 
     const rawName = pwName.value.trim();
-    const title = rawName ? clampTitle(rawName) : getNextUntitledName();
+    const baseTitle = rawName ? clampTitle(rawName) : getNextUntitledName();
+    const title = rawName ? ensureUniqueTitle(baseTitle) : baseTitle;
     const password = pwDisplay.value.trim();
     if (!password) {
         showNotice("パスワードを入力するか、生成してください。", "error");
@@ -1059,7 +1809,7 @@ function restoreCards() {
 
         const card = buildCardElement({
             id: item.id || generateId(),
-            title: item.title || getNextUntitledName(),
+            title: ensureUniqueTitle(item.title || getNextUntitledName()),
             password: String(item.password || ""),
             expiresAt,
             emergencyLimit: Math.max(0, parseInt(item.emergencyLimit || "0", 10) || 0),
@@ -1075,9 +1825,54 @@ function restoreCards() {
 }
 
 // ---------- Event bindings ----------
+function bindLogoNavigation() {
+    const logo = document.querySelector('.logo');
+    if (!logo) return;
+
+    logo.setAttribute('role', 'button');
+    logo.setAttribute('tabindex', '0');
+
+    const goHome = () => {
+        const path = window.location.pathname || '';
+        const isHome = /(?:^|\/)(?:index\.html)?$/.test(path) || path.endsWith('/') || path.endsWith('/index.html');
+        if (isHome) window.location.reload();
+        else window.location.href = 'index.html';
+    };
+
+    logo.addEventListener('click', goHome);
+    logo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            goHome();
+        }
+    });
+}
+
 function setupBasicEvents() {
+    bindLogoNavigation();
+    // Settings
+    settingsBtn?.addEventListener("click", openSettingsModal);
+    settingsCancelBtn?.addEventListener("click", closeSettingsModal);
+    settingsSaveBtn?.addEventListener("click", saveSettingsFromModal);
+    ratioLettersInput?.addEventListener("input", () => enforceRatioConstraint('letters'));
+    ratioSymbolsInput?.addEventListener("input", () => enforceRatioConstraint('symbols'));
+    ratioUpperInput?.addEventListener("input", updateRatioSummaryText);
+    ratioResetBtn?.addEventListener("click", resetRatiosToDefault);
+    trashRetentionDaysInput?.addEventListener("input", () => {
+        const n = clampInt(trashRetentionDaysInput.value, 1, 30, getTrashRetentionDays());
+        trashRetentionDaysInput.value = String(n);
+    });
+    excludeCharsInput?.addEventListener("input", () => {
+        // no-op, but keep for future
+    });
+
     createBtn?.addEventListener("click", openCreateModal);
     createCardBtn?.addEventListener("click", openCreateModal);
+
+    // Navigate to mini game page
+    minigameBtn?.addEventListener("click", () => {
+        window.location.href = "minigame.html";
+    });
     createCardBtn?.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -1089,13 +1884,53 @@ function setupBasicEvents() {
     saveBtn?.addEventListener("click", saveNewCardFromModal);
     deleteAllBtn?.addEventListener("click", askDeleteAllCards);
 
-    [modal, extendLimitModal, confirmModal, passwordPreviewModal].forEach(overlay => {
+    trashBtn?.addEventListener("click", openTrashModal);
+    trashCloseBtn?.addEventListener("click", closeTrashModal);
+
+    trashSelectAll?.addEventListener("change", () => {
+        if (!trashList) return;
+        const check = !!trashSelectAll.checked;
+        trashList.querySelectorAll(".trash-checkbox").forEach(cb => { cb.checked = check; });
+        syncTrashSelectAllState();
+    });
+
+    trashRestoreSelectedBtn?.addEventListener("click", () => {
+        const ids = getSelectedTrashIds();
+        if (ids.length) restoreTrashItems(ids);
+    });
+
+    trashDeleteSelectedBtn?.addEventListener("click", () => {
+        const ids = getSelectedTrashIds();
+        if (ids.length) purgeTrashItems(ids);
+    });
+
+    trashEmptyBtn?.addEventListener("click", () => {
+        const items = getTrashItems();
+        if (!items.length) { showNotice("ゴミ箱は空です。", "info"); return; }
+        showConfirmDialog({
+            title: "ゴミ箱を空にする",
+            text: `ゴミ箱内の ${items.length} 件をすべて完全に削除しますか？`,
+            subtext: "この操作は取り消せません。",
+            okText: "全削除",
+            danger: true,
+            onConfirm: () => {
+                clearTrash();
+                renderTrashList();
+                showNotice("ゴミ箱を空にしました。", "info");
+            }
+        });
+    });
+
+
+    [modal, extendLimitModal, confirmModal, passwordPreviewModal, trashModal, settingsModal].forEach(overlay => {
         overlay?.addEventListener("click", (e) => {
             if (e.target !== overlay) return;
             if (overlay === modal) closeModal();
             else if (overlay === extendLimitModal) closeExtendLimitModal();
             else if (overlay === confirmModal) closeConfirmDialog();
             else if (overlay === passwordPreviewModal) closePasswordPreview();
+            else if (overlay === trashModal) closeTrashModal();
+            else if (overlay === settingsModal) closeSettingsModal();
         });
     });
 
@@ -1104,7 +1939,9 @@ function setupBasicEvents() {
             if (activeMenuCard) closeActiveMenu();
             else if (!confirmModal?.classList.contains("hidden")) closeConfirmDialog();
             else if (!passwordPreviewModal?.classList.contains("hidden")) closePasswordPreview();
+            else if (!trashModal?.classList.contains("hidden")) closeTrashModal();
             else if (!extendLimitModal?.classList.contains("hidden")) closeExtendLimitModal();
+            else if (!settingsModal?.classList.contains("hidden")) closeSettingsModal();
             else if (!modal?.classList.contains("hidden")) closeModal();
         }
     });
@@ -1203,6 +2040,9 @@ function setupScrollTopButton() {
 
 // ---------- Init ----------
 function init() {
+    appSettings = loadSettingsFromStorage();
+    updateTrashRetentionText();
+
     createDateTimeCtrl = createDateTimeController({
         root: document.getElementById("passwordModal"),
         dateContainer: document.getElementById("customDateContainer"),
@@ -1217,6 +2057,17 @@ function init() {
 
     setupBasicEvents();
     setupScrollTopButton();
+    updateTrashBadge();
+    // prune trash periodically
+    setInterval(() => {
+        const before = loadTrashFromStorage();
+        const after = normalizeAndPruneTrash(before);
+        if (after.length !== (Array.isArray(before) ? before.length : 0)) {
+            saveTrashToStorage(after);
+            updateTrashBadge();
+            if (!trashModal?.classList.contains("hidden")) renderTrashList();
+        }
+    }, 60 * 1000);
     updateReloadButtonState();
     updateCaseOptionRestrictions();
     toggleOptions();

@@ -15,6 +15,25 @@
     z-index: 999;
 }
 
+/*
+   Overlay stacking
+   - Trash modal is often open while we show confirm dialogs.
+   - Give confirm / preview higher z-index so they are visible.
+*/
+#trashModal { z-index: 1100; }
+#passwordModal { z-index: 1120; }
+#extendLimitModal { z-index: 1130; }
+#passwordPreviewModal { z-index: 1200; }
+#confirmModal { z-index: 1250; }
+
+/* Disabled buttons (used in trash + toolbars) */
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* Container */
 .modal-container {
     width: min(92%, 420px);
@@ -147,11 +166,11 @@
     min-height: 90px;
     border-radius: 12px;
     padding: 15px 12px;
-    font-size: 30px;
+    font-size: 24px;
     line-height: 1.4;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     display: block;
-    font-weight: 900;
+    font-weight: 800;
     word-break: break-all;
 }
 
@@ -311,8 +330,8 @@
 /* Icon Buttons (Area & Layout) */
 .pw-display-area {
     display: flex;
-    align-items: center;
-    gap: 15px;
+    align-items: stretch;
+    gap: 12px;
     width: 100%;
     margin-top: 12px;
 }
@@ -321,14 +340,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
-    margin-top: 10px;
-    scale: 1.25;
+    gap: 12px;
+    margin-top: 0;
+    align-self: center;
 }
 
 .icon-slot {
-    width: 1.6em;
-    height: 1.6em;
+    width: 1.45em;
+    height: 1.45em;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -336,13 +355,13 @@
 }
 
 .no-hover {
-    font-size: 26px;
+    font-size: 22px;
     opacity: 0.75;
 }
 
 .icon-btn {
     cursor: pointer;
-    font-size: 26px;
+    font-size: 22px;
     opacity: 0.75;
     transition: opacity .2s ease, transform .15s ease;
 }
@@ -733,6 +752,126 @@
     line-height: 1.45;
 }
 
+/* =========================================
+   Settings Modal
+   ========================================= */
+.settings-modal {
+    width: min(92%, 560px);
+    padding-top: 22px;
+}
+
+.settings-help {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.settings-ratio-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin-top: 10px;
+    margin-left: 6px;
+    align-items: center;
+}
+
+
+/* Slider style (settings: ratios) */
+.settings-ratio-row.is-sliders {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+
+.settings-field.settings-field-range {
+    display: grid;
+    grid-template-columns: 56px 1fr 64px;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.settings-range {
+    width: 100%;
+    accent-color: #007aff;
+}
+
+.settings-range-val {
+    font-size: 13px;
+    font-weight: 800;
+    color: #111827;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.ratio-reset-row {
+    margin-top: 10px;
+    margin-left: 6px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.settings-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #f7f7f8;
+    border: 1px solid #d7d8da;
+    border-radius: 14px;
+}
+
+.settings-field label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.settings-field .unit {
+    font-size: 13px;
+    font-weight: 800;
+    color: #374151;
+}
+
+.settings-num {
+    width: 74px;
+    border: 2px solid #b8b8b8;
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 16px;
+    background: #fff;
+    outline: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.settings-num:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.settings-ratio-summary {
+    margin-top: 10px;
+    margin-left: 6px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.settings-inline-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    margin-left: 6px;
+}
+
+.settings-inline-row .unit {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+}
+
 @media (max-width: 600px) {
     .notice-area {
         top: 10px;
@@ -745,5 +884,134 @@
     .preview-modal .modal-title,
     .extend-limit-modal .modal-title {
         font-size: 24px;
+    }
+}
+
+
+/* =========================================
+   Trash Modal
+   ========================================= */
+.trash-modal {
+    width: min(92%, 680px);
+    padding: 22px 26px 26px 26px;
+}
+
+.trash-toolbar {
+    margin-top: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.trash-selectall {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    user-select: none;
+}
+
+.trash-toolbar-actions {
+    display: inline-flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.trash-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.trash-empty {
+    padding: 18px 6px 6px;
+    color: #6b7280;
+    font-size: 13px;
+    text-align: left;
+}
+
+.trash-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: start;
+    padding: 12px;
+    background: #f7f7f8;
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    border-radius: 14px;
+}
+
+.trash-item-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.trash-item-pass {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.trash-pass-text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: #111827;
+    background: #fff;
+    border: 1px solid rgba(17, 24, 39, 0.12);
+    border-radius: 10px;
+    padding: 6px 10px;
+    max-width: 100%;
+    word-break: break-all;
+}
+
+.trash-meta {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.trash-lock-note {
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 59, 48, 0.10);
+    color: #d92d20;
+    font-weight: 800;
+    font-size: 11px;
+}
+
+.trash-row-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .trash-modal {
+        padding: 18px 18px 22px 18px;
+    }
+
+    .trash-item {
+        grid-template-columns: auto 1fr;
+    }
+
+    .trash-row-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: flex-end;
     }
 }
